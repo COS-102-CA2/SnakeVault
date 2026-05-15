@@ -4,7 +4,7 @@ import os
 
 class PasswordStore:
     def __init__(self,  master_key):
-        self._db_file = 'user_passwords'
+        self._db_file = '~/user_passwords'
         self._master_key = master_key.encode('utf-8')
 
     def store_password(self, identifier, password):

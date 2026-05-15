@@ -1,6 +1,6 @@
 from setup import *
-from window_manager import *
-from screens.passwords import *
+from libs.window_manager import *
+from screens.dashboard import *
 
 
 

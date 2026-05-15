@@ -1,5 +1,5 @@
-from window_manager import *
-from screens.title_screen import *
+from libs.window_manager import *
+from screens.title import *
 from setup import *
 
 

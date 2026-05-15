@@ -1,7 +1,11 @@
 from setup import *
-from window_manager import *
+from libs.window_manager import *
 
 test_passwords=["boo","baa"]
+'''
+This file is meant to contain a list of passwords. The user can view a password that they have saved, and can analyze
+'''
+
 
 class PasswordsScreen(Screen):
     def __init__(self):
@@ -12,7 +16,7 @@ class PasswordsScreen(Screen):
         resultText=tk.Label(self.frame,text="")
 
         for i in test_passwords:
-            insertString(self.frame,i,("Inter",17))
+         insertString(self.frame,i,("Inter",17))
         tbox=tk.Entry(self.frame)
         
         

@@ -1,4 +1,4 @@
-from setup import *
+from libs.common import *
 from libs.window_manager import *
 from screens.dashboard import *
 

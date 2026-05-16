@@ -1,5 +1,6 @@
-from setup import *
+from libs.common import *
 from libs.helpers import *
+
 frames:list[tk.Frame]=[]
 
 def create_frame(root:tk.Tk):

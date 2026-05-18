@@ -1,4 +1,5 @@
 import tkinter as tk
+from libs.common import *
 
 frames: list[tk.Frame] = []
 
@@ -8,7 +9,7 @@ def show_frame(f: tk.Frame):
     f.pack(fill="both", expand=True)
 
 class Screen:
-    def __init__(self, root: tk.Tk):
+    def __init__(self):
         self.root = root
         self.frame = tk.Frame(root)
         frames.append(self.frame)

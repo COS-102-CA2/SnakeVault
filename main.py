@@ -1,14 +1,16 @@
-from libs.window_manager import *
-from screens.title import *
-from libs.common import *
+import tkinter as tk
+from libs.window_manager import Screen
+from screens.welcome import WelcomeScreen
 
-root=Tk()
-root.geometry('600x400')
-root.resizable(False,False)
+# Create the one and only application window
+root = tk.Tk()
+root.title("SnakeVault")
+root.geometry("600x400")
+root.resizable(False, False)
 
+# Show the first screen
+welcome = WelcomeScreen(root)
+welcome.show()
 
-w=TitleScreen()
-w.show()
-
-
+# Start the app — this line keeps the window open and listening for clicks
 root.mainloop()

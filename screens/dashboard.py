@@ -5,6 +5,10 @@ test_passwords=["boo","baa"]
 '''
 This file is meant to contain a list of passwords. The user can view a password that they have saved, and can analyze it. It is for the dashboard. 
 '''
+def insertString(root,s:str,font):
+    lbl=tk.Label(root)
+    lbl.configure(font=font,text=s)
+    lbl.pack()
 
 
 class PasswordsScreen(Screen):

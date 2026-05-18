@@ -11,7 +11,7 @@ def password_click():
 
 
 
-class TitleScreen(Screen):
+class WelcomeScreen(Screen):
     def __init__(self):
         Screen.__init__(self)
 

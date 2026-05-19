@@ -1,0 +1,14 @@
+BG = "#1E1E2E"
+SURFACE = "#2A2A3E"
+SURFACE2 = "#313148"
+BORDER = "#44445A"
+GOLD = "#C9A84C"
+TEXT = "#E8E6F0"
+MUTED = "#8A8AA8"
+DANGER = "#E06B6B"
+SUCCESS = "#6DB86D"
+
+FONT = ("Segoe UI", 11)
+FONT_SM = ("Segoe UI", 9)
+FONT_LG = ("Segoe UI", 14, "bold")
+FONT_TITLE = ("Segoe UI", 24, "bold")

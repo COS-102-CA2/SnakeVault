@@ -1,4 +1,3 @@
-put in create_key.py :
 import tkinter as tk
 from tkinter import messagebox
 

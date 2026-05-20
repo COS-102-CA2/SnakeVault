@@ -97,9 +97,10 @@ class UnlockScreen(tk.Frame):
     def unlock(self):
         entered_key = self.key_entry.get()
 
-        if not entered_key:
-            self.error_label.configure(text="Enter your master key.")
-            return
+    if not entered_key:
+        self.key_entry.delete(0, tk.END)
+        self.error_label.configure(text="Enter your master key.")
+        return
 
         result = get_master_key()
 

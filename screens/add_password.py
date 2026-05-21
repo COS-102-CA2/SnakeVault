@@ -133,8 +133,15 @@ class AddPasswordScreen(tk.Frame):
         category = self.category_entry.get().strip() or "General"
         notes = self.notes_entry.get().strip()
 
-        encrypted_password = encrypt(password, self.controller.master_key)
+        if not site or not username or not password:
+            messagebox.showwarning(
+                "Missing details",
+                "Site, username, and password are required.",
+            )
+            return
 
+        encrypted_password = encrypt(password, self.controller.master_key)
+        
         result = save_password(
             site,
             url,

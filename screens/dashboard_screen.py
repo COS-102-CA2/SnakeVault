@@ -1,105 +1,270 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
-from db import fetch_user_passwords, save_password, logout_user
+from tkinter import messagebox
+
+from db import fetch_user_passwords, logout_user
+from libs.window_manager import BG, BORDER, GOLD, MUTED, SURFACE, SURFACE2, TEXT, FONT, FONT_LG, FONT_TITLE
+
 
 class DashboardScreen(tk.Frame):
     def __init__(self, parent, controller):
-        super().__init__(parent, bg="#1e1e2e")
+        super().__init__(parent, bg=BG)
         self.controller = controller
+        self.entries = []
 
-        # --- Top Navigation Panel ---
-        nav_panel = tk.Frame(self, bg="#11111b", height=50)
-        nav_panel.pack(fill="x", side="top")
+        self.sidebar = tk.Frame(self, bg="#151522", width=172)
+        self.sidebar.pack(side="left", fill="y")
+        self.sidebar.pack_propagate(False)
 
-        welcome_lbl = tk.Label(nav_panel, text="🔒 Your Secure Vault", font=("Arial", 14, "bold"), fg="#cdd6f4", bg="#11111b")
-        welcome_lbl.pack(side="left", padx=20, pady=10)
+        self.build_sidebar()
 
-        logout_btn = tk.Button(nav_panel, text="Logout", bg="#f38ba8", fg="#11111b", command=self.handle_logout)
-        logout_btn.pack(side="right", padx=20, pady=10)
+        self.main = tk.Frame(self, bg=BG)
+        self.main.pack(side="left", fill="both", expand=True, padx=18, pady=16)
 
-        # --- Main Layout Split ---
-        # Left Panel: Adding a new password
-        self.left_panel = tk.Frame(self, bg="#181825", width=250)
-        self.left_panel.pack(side="left", fill="y", padx=10, pady=10)
-        self.setup_add_form()
+        tk.Label(
+            self.main,
+            text="Dashboard",
+            font=FONT_TITLE,
+            fg=GOLD,
+            bg=BG,
+        ).pack(anchor="w")
 
-        # Right Panel: Displaying saved passwords
-        right_panel = tk.Frame(self, bg="#1e1e2e")
-        right_panel.pack(side="right", fill="both", expand=True, padx=10, pady=10)
+        tk.Label(
+            self.main,
+            text="Your saved credentials at a glance",
+            font=FONT,
+            fg=MUTED,
+            bg=BG,
+        ).pack(anchor="w", pady=(2, 16))
 
-        # Treeview to display credentials
-        self.tree = ttk.Treeview(right_panel, columns=("Site", "URL", "Username", "Password"), show="headings")
-        self.tree.heading("Site", text="Site Name")
-        self.tree.heading("URL", text="URL")
-        self.tree.heading("Username", text="Username")
-        self.tree.heading("Password", text="Password (Encrypted)")
-        self.tree.pack(fill="both", expand=True)
+        stats = tk.Frame(self.main, bg=BG)
+        stats.pack(fill="x")
 
-        # Refresh button
-        refresh_btn = tk.Button(right_panel, text="🔄 Refresh Vault", bg="#89b4fa", command=self.load_vault_data)
-        refresh_btn.pack(pady=10)
+        self.total_value = self.stat_card(stats, "0", "Total")
+        self.weak_value = self.stat_card(stats, "0", "Weak")
+        self.category_value = self.stat_card(stats, "0", "Categories")
 
-        # Load data on open
+        header = tk.Frame(self.main, bg=BG)
+        header.pack(fill="x", pady=(18, 8))
+
+        tk.Label(
+            header,
+            text="Recently accessed",
+            font=FONT_LG,
+            fg=TEXT,
+            bg=BG,
+        ).pack(side="left")
+
+        tk.Button(
+            header,
+            text="Refresh",
+            font=FONT,
+            bg=SURFACE2,
+            fg=TEXT,
+            bd=0,
+            command=self.load_vault_data,
+        ).pack(side="right", ipadx=14, ipady=6)
+
+        self.list_frame = tk.Frame(
+            self.main,
+            bg=SURFACE,
+            highlightbackground=BORDER,
+            highlightthickness=1,
+        )
+        self.list_frame.pack(fill="both", expand=True)
+
+        footer = tk.Frame(self.main, bg=BG)
+        footer.pack(fill="x", pady=(12, 0))
+
+        tk.Button(
+            footer,
+            text="View all",
+            font=FONT,
+            bg=SURFACE2,
+            fg=TEXT,
+            bd=0,
+            command=lambda: controller.show_screen("search"),
+        ).pack(side="right", ipadx=24, ipady=8)
+
+        tk.Button(
+            footer,
+            text="Add password",
+            font=FONT_LG,
+            bg=GOLD,
+            fg="#161622",
+            bd=0,
+            command=lambda: controller.show_screen("add_password"),
+        ).pack(side="right", padx=(0, 10), ipadx=28, ipady=8)
+
         self.load_vault_data()
 
-    def setup_add_form(self):
-        """Creates form elements to add a credential."""
-        tk.Label(self.left_panel, text="Add New Credential", font=("Arial", 12, "bold"), fg="#cdd6f4", bg="#181825").pack(pady=10)
+    def build_sidebar(self):
+        tk.Label(
+            self.sidebar,
+            text="SnakeVault",
+            font=FONT_LG,
+            fg=GOLD,
+            bg="#151522",
+        ).pack(anchor="w", padx=16, pady=(24, 2))
 
-        tk.Label(self.left_panel, text="Site Name", fg="#a6adc8", bg="#181825").pack()
-        self.site_entry = tk.Entry(self.left_panel, bg="#313244", fg="#cdd6f4", bd=0)
-        self.site_entry.pack(pady=5, padx=10, fill="x")
+        self.entry_count = tk.Label(
+            self.sidebar,
+            text="0 entries",
+            font=FONT,
+            fg=MUTED,
+            bg="#151522",
+        )
+        self.entry_count.pack(anchor="w", padx=16, pady=(0, 24))
 
-        tk.Label(self.left_panel, text="URL", fg="#a6adc8", bg="#181825").pack()
-        self.url_entry = tk.Entry(self.left_panel, bg="#313244", fg="#cdd6f4", bd=0)
-        self.url_entry.pack(pady=5, padx=10, fill="x")
+        nav_items = [
+            ("Dashboard", "dashboard"),
+            ("Passwords", "search"),
+            ("Search", "search"),
+            ("Generator", "generator"),
+            ("Settings", "settings"),
+        ]
 
-        tk.Label(self.left_panel, text="Username/Email", fg="#a6adc8", bg="#181825").pack()
-        self.user_entry = tk.Entry(self.left_panel, bg="#313244", fg="#cdd6f4", bd=0)
-        self.user_entry.pack(pady=5, padx=10, fill="x")
+        for text, target in nav_items:
+            active = target == "dashboard"
 
-        tk.Label(self.left_panel, text="Password", fg="#a6adc8", bg="#181825").pack()
-        self.pass_entry = tk.Entry(self.left_panel, bg="#313244", fg="#cdd6f4", bd=0)
-        self.pass_entry.pack(pady=5, padx=10, fill="x")
+            tk.Button(
+                self.sidebar,
+                text=text,
+                font=FONT,
+                anchor="w",
+                bg=SURFACE if active else "#151522",
+                fg=GOLD if active else MUTED,
+                activebackground=SURFACE,
+                activeforeground=TEXT,
+                bd=0,
+                command=lambda screen=target: self.controller.show_screen(screen),
+            ).pack(fill="x", padx=0, pady=2, ipady=9)
 
-        save_btn = tk.Button(self.left_panel, text="Save to Vault", bg="#a6e3a1", fg="#11111b", command=self.handle_save)
-        save_btn.pack(pady=20, padx=10, fill="x")
+        tk.Button(
+            self.sidebar,
+            text="Lock",
+            font=FONT,
+            bg="#E06B6B",
+            fg="#11111b",
+            bd=0,
+            command=self.handle_logout,
+        ).pack(side="bottom", anchor="w", padx=14, pady=22, ipadx=22, ipady=8)
 
-    def handle_save(self):
-        site = self.site_entry.get().strip()
-        url = self.url_entry.get().strip()
-        user = self.user_entry.get().strip()
-        password = self.pass_entry.get().strip()
+    def stat_card(self, parent, value, label):
+        card = tk.Frame(
+            parent,
+            bg=SURFACE,
+            highlightbackground=BORDER,
+            highlightthickness=1,
+        )
+        card.pack(side="left", fill="x", expand=True, padx=(0, 10), ipady=12)
 
-        if not site or not user or not password:
-            messagebox.showwarning("Validation Error", "Site, Username, and Password fields are required.")
-            return
+        value_label = tk.Label(
+            card,
+            text=value,
+            font=FONT_TITLE,
+            fg=GOLD,
+            bg=SURFACE,
+        )
+        value_label.pack()
 
-        # Passing straight to db for now. Next step we encrypt 'password' here first!
-        result = save_password(site, url, user, password)
-        if result["success"]:
-            messagebox.showinfo("Saved", "Credential safely stored!")
-            self.load_vault_data()
-            # Clear fields
-            self.site_entry.delete(0, tk.END)
-            self.url_entry.delete(0, tk.END)
-            self.user_entry.delete(0, tk.END)
-            self.pass_entry.delete(0, tk.END)
-        else:
-            messagebox.showerror("Error", result.get("error", "Could not save entry."))
+        tk.Label(
+            card,
+            text=label,
+            font=FONT,
+            fg=MUTED,
+            bg=SURFACE,
+        ).pack()
+
+        return value_label
 
     def load_vault_data(self):
-        """Clears treeview and reloads data from Supabase."""
-        for row in self.tree.get_children():
-            self.tree.delete(row)
+        for child in self.list_frame.winfo_children():
+            child.destroy()
 
         result = fetch_user_passwords()
-        if result["success"]:
-            for item in result["data"]:
-                self.tree.insert("", "end", values=(item["site_name"], item["url"], item["username"], item["encrypted_password"]))
-        else:
-            messagebox.showerror("Error", "Could not fetch vault items.")
+
+        if not result["success"]:
+            messagebox.showerror(
+                "Error",
+                result.get("error", "Could not fetch vault items."),
+            )
+            return
+
+        self.entries = result["data"]
+
+        total = len(self.entries)
+        categories = {
+            item.get("category") or "General"
+            for item in self.entries
+        }
+        weak = sum(
+            1
+            for item in self.entries
+            if "weak" in (item.get("notes") or "").lower()
+        )
+
+        self.total_value.configure(text=str(total))
+        self.weak_value.configure(text=str(weak))
+        self.category_value.configure(text=str(len(categories)))
+        self.entry_count.configure(text=f"{total} entries")
+
+        if not self.entries:
+            tk.Label(
+                self.list_frame,
+                text="No passwords yet.",
+                font=FONT,
+                fg=MUTED,
+                bg=SURFACE,
+            ).pack(pady=80)
+            return
+
+        for item in self.entries[:8]:
+            self.add_entry_row(item)
+
+    def add_entry_row(self, item):
+        row = tk.Frame(self.list_frame, bg=SURFACE)
+        row.pack(fill="x", padx=18, pady=8)
+
+        row.bind(
+            "<Button-1>",
+            lambda _event: self.open_detail(item),
+        )
+
+        text = tk.Frame(row, bg=SURFACE)
+        text.pack(side="left", fill="x", expand=True)
+
+        tk.Label(
+            text,
+            text=item.get("site_name", "Untitled"),
+            font=FONT_LG,
+            fg=TEXT,
+            bg=SURFACE,
+        ).pack(anchor="w")
+
+        tk.Label(
+            text,
+            text=item.get("username", ""),
+            font=FONT,
+            fg=MUTED,
+            bg=SURFACE,
+        ).pack(anchor="w")
+
+        category = item.get("category") or "General"
+
+        tk.Label(
+            row,
+            text=category,
+            font=FONT,
+            fg=TEXT,
+            bg=SURFACE2,
+            padx=10,
+            pady=4,
+        ).pack(side="right")
+
+    def open_detail(self, entry):
+        self.controller.show_screen("password_detail", entry=entry)
 
     def handle_logout(self):
         logout_user()
+        self.controller.master_key = None
         self.controller.show_screen("login")

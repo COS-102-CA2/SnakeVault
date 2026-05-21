@@ -137,35 +137,50 @@ class GeneratorScreen(tk.Frame):
         ).pack(side="left", padx=(0, 18))
 
     def generate(self):
-            pools = []
+        pools = []
 
-            if self.upper_var.get():
-                pools.append(string.ascii_uppercase)
+        if self.upper_var.get():
+            pools.append(string.ascii_uppercase)
 
-            if self.lower_var.get():
-                pools.append(string.ascii_lowercase)
+        if self.lower_var.get():
+            pools.append(string.ascii_lowercase)
 
-            if self.number_var.get():
-                pools.append(string.digits)
+        if self.number_var.get():
+            pools.append(string.digits)
 
-            if self.symbol_var.get():
-                pools.append("!@#$%^&*()-_=+[]{};:,.?")
+        if self.symbol_var.get():
+            pools.append("!@#$%^&*()-_=+[]{};:,.?")
 
-            if not pools:
-                messagebox.showwarning(
-                    "No character types",
-                    "Select at least one character type.",
-                )
-                return
-
-            alphabet = "".join(pools)
-
-            password = "".join(
-                secrets.choice(alphabet)
-                for _ in range(self.length_var.get())
+        if not pools:
+            messagebox.showwarning(
+                "No character types",
+                "Select at least one character type.",
             )
+            return
 
-            self.generated_var.set(password)
+        alphabet = "".join(pools)
+
+        password = "".join(
+            secrets.choice(alphabet)
+            for _ in range(self.length_var.get())
+        )
+
+        self.generated_var.set(password)
 
     def copy(self):
-        pass
+        password = self.generated_var.get()
+
+        if not password:
+            messagebox.showwarning(
+                "Nothing to copy",
+                "Generate a password before copying.",
+            )
+            return
+
+        self.clipboard_clear()
+        self.clipboard_append(password)
+
+        messagebox.showinfo(
+            "Copied",
+            "Generated password copied to clipboard.",
+        )

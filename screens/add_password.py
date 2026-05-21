@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 from db import save_password
+from libs.crypto import encrypt
 from libs.window_manager import BG, BORDER, GOLD, MUTED, SURFACE, SURFACE2, TEXT, FONT, FONT_LG, FONT_TITLE
 
 
@@ -132,11 +133,13 @@ class AddPasswordScreen(tk.Frame):
         category = self.category_entry.get().strip() or "General"
         notes = self.notes_entry.get().strip()
 
+        encrypted_password = encrypt(password, self.controller.master_key)
+
         result = save_password(
             site,
             url,
             username,
-            password,
+            encrypted_password,
             category,
             notes,
         )
@@ -144,7 +147,7 @@ class AddPasswordScreen(tk.Frame):
         if result["success"]:
             messagebox.showinfo(
                 "Saved",
-                "Credential saved.",
+                "Credential saved securely.",
             )
             self.controller.show_screen("dashboard")
         else:

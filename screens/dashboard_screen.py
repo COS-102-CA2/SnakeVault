@@ -10,6 +10,9 @@ class DashboardScreen(tk.Frame):
         super().__init__(parent, bg=BG)
         self.controller = controller
         self.entries = []
+        if not self.controller.master_key:
+            self.after(0, lambda: self.controller.show_screen("login"))
+            return
 
         self.sidebar = tk.Frame(self, bg="#151522", width=172)
         self.sidebar.pack(side="left", fill="y")
@@ -191,7 +194,6 @@ class DashboardScreen(tk.Frame):
             return
 
         self.entries = result["data"]
-
         total = len(self.entries)
         categories = {
             item.get("category") or "General"

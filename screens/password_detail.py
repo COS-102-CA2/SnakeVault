@@ -1,5 +1,7 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox,simpledialog
+from db import get_master_key
+from libs.crypto import verify_key
 
 from libs.window_manager import BG, BORDER, GOLD, MUTED, SURFACE, SURFACE2, TEXT, FONT, FONT_LG, FONT_TITLE
 
@@ -9,6 +11,7 @@ class PasswordDetailScreen(tk.Frame):
         super().__init__(parent, bg=BG)
         self.controller = controller
         self.entry_data = entry
+        self.verified_key=None
 
         top = tk.Frame(self, bg=BG)
         top.pack(fill="x", padx=54, pady=(42, 18))
@@ -53,6 +56,18 @@ class PasswordDetailScreen(tk.Frame):
         )
         self.add_display(body, "Category", entry.get("category", "General"))
         self.add_display(body, "Notes", entry.get("notes", ""))
+        actions = tk.Frame(body, bg=SURFACE)
+        actions.pack(fill="x", pady=(20, 0))
+
+        tk.Button(
+            actions,
+            text="Reveal password",
+            font=FONT_LG,
+            bg=GOLD,
+            fg="#161622",
+            bd=0,
+            command=self.verify_before_reveal,
+        ).pack(side="left", ipadx=24, ipady=9)
 
     def add_display(self, parent, label, value, can_copy=False):
         tk.Label(
@@ -103,3 +118,38 @@ class PasswordDetailScreen(tk.Frame):
             "Copied",
             "Value copied to clipboard.",
         )
+
+
+        def verify_before_reveal(self):
+         entered_key = simpledialog.askstring(
+            "Verify master key",
+            "Enter your master key:",
+            show="*",
+            parent=self,
+        )
+
+         if not entered_key:
+            return
+
+         result = get_master_key()
+
+         if not result["success"] or not result["data"]:
+            messagebox.showerror(
+                "Verification failed",
+                result.get("error", "Could not verify master key."),
+            )
+            return
+
+         if not verify_key(entered_key, result["data"]):
+            messagebox.showerror(
+                "Wrong key",
+                "Incorrect master key.",
+            )
+            return
+
+         self.verified_key = entered_key
+
+         messagebox.showinfo(
+            "Verified",
+            "Master key verified. Password reveal will be added next.",
+         )

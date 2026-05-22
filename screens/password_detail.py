@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox,simpledialog
 from libs.db import get_master_key
-from libs.crypto import verify_key
+from libs.crypto import verify_key, decrypt
 
 from libs.window_manager import BG, BORDER, GOLD, MUTED, SURFACE, SURFACE2, TEXT, FONT, FONT_LG, FONT_TITLE
 
@@ -120,36 +120,44 @@ class PasswordDetailScreen(tk.Frame):
         )
 
 
-        def verify_before_reveal(self):
-         entered_key = simpledialog.askstring(
+    def verify_before_reveal(self):
+        entered_key = simpledialog.askstring(
             "Verify master key",
             "Enter your master key:",
             show="*",
             parent=self,
         )
 
-         if not entered_key:
+        if not entered_key:
             return
 
-         result = get_master_key()
+        result = get_master_key()
 
-         if not result["success"] or not result["data"]:
+        if not result["success"] or not result["data"]:
             messagebox.showerror(
                 "Verification failed",
                 result.get("error", "Could not verify master key."),
             )
             return
 
-         if not verify_key(entered_key, result["data"]):
+        if not verify_key(entered_key, result["data"]):
             messagebox.showerror(
                 "Wrong key",
                 "Incorrect master key.",
             )
             return
 
-         self.verified_key = entered_key
+        try:
+            decrypted_password = decrypt(
+                self.entry_data.get("encrypted_password", ""),
+                entered_key,
+            )
+        except Exception:
+            messagebox.showerror(
+                "Decrypt failed",
+                "Could not decrypt this password with the supplied key.",
+            )
+            return
 
-         messagebox.showinfo(
-            "Verified",
-            "Master key verified. Password reveal will be added next.",
-         )
+        self.verified_key = entered_key
+        self.password_value.configure(text=decrypted_password)

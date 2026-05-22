@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import messagebox,simpledialog
-from libs.db import get_master_key
+from libs.db import get_master_key, delete_password
 from libs.crypto import verify_key, decrypt
 
-from libs.window_manager import BG, BORDER, GOLD, MUTED, SURFACE, SURFACE2, TEXT, FONT, FONT_LG, FONT_TITLE
+from libs.window_manager import BG, BORDER, DANGER, GOLD, MUTED, SURFACE, SURFACE2, TEXT, FONT, FONT_LG, FONT_TITLE
 
 
 class PasswordDetailScreen(tk.Frame):
@@ -57,7 +57,18 @@ class PasswordDetailScreen(tk.Frame):
         )
         self.add_display(body, "Category", entry.get("category", "General"))
         self.add_display(body, "Notes", entry.get("notes", ""))
+
         actions = tk.Frame(body, bg=SURFACE)
+        tk.Button(
+            actions,
+            text="Delete",
+            font=FONT,
+            bg=DANGER,
+            fg="#11111b",
+            bd=0,
+            command=self.delete_entry,
+        ).pack(side="right", ipadx=22, ipady=9)
+
         actions.pack(fill="x", pady=(20, 0))
 
         tk.Button(
@@ -170,3 +181,23 @@ class PasswordDetailScreen(tk.Frame):
          self.password_value.configure(text="Hidden until verified")
          self.verified_key = None
          self.hide_job = None
+
+
+        def delete_entry(self):
+         confirm = messagebox.askyesno(
+            "Delete password",
+            "Delete this saved credential?",
+        )
+
+         if not confirm:
+            return
+
+         result = delete_password(self.entry_data.get("id"))
+
+         if result["success"]:
+            self.controller.show_screen("dashboard")
+         else:
+            messagebox.showerror(
+                "Delete failed",
+                result.get("error", "Could not delete credential."),
+            )

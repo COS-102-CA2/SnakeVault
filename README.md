@@ -1,57 +1,154 @@
-#SnakeVault
-A desktop password manager built with Python, Tkinter, and PostgreSQL.
+# SnakeVault
 
-##Requirements
+SnakeVault is a desktop password manager built with Python, Tkinter, and Supabase.
 
-- Python 3.10 or higher
-- PostgreSQL installed and running
+It uses two layers of security:
 
-##Setup — do this once before running the app
+1. Supabase Auth for account login/signup
+2. A local master key for vault encryption and decryption
 
-**1. Clone the repository**
-git clone <your-org-repo-url>
-cd SnakeVault
+The master key is never stored directly. Only its bcrypt hash is saved in Supabase.
 
-**2. Install dependencies**
+## Tech Stack
+
+- Python
+- Tkinter
+- Supabase
+- bcrypt
+- python-dotenv
+
+## Setup
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
+```
 
-**3. Create your .env file**
-Copy the example file and fill in your own PostgreSQL credentials:
-cp .env.example .env
+Create a `.env` file in the project root:
 
-Then open .env and replace the placeholder values with your actual details.
+```env
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_anon_key
+```
 
-**4. Create the database in PostgreSQL**
-Open your PostgreSQL shell and run:
-CREATE DATABASE snakvault;
+Run the app:
 
-**5. Run the app**
+```bash
 python main.py
+```
 
-##Project structure
-SnakeVault/
-├── main.py — app entry point
-├── db.py — all PostgreSQL queries
-├── requirements.txt — project dependencies
-├── .env — your local credentials (never committed)
-├── .env.example — template showing what .env needs
-├── libs/
-│ ├── crypto.py — encryption and decryption
-│ └── window_manager.py — screen navigation
-├── screens/
-│ ├── welcome.py — welcome screen
-│ ├── create_key.py — new user master key setup
-│ ├── confirm_key.py — confirm master key
-│ ├── setup_done.py — setup success screen
-│ ├── unlock.py — returning user unlock
-│ ├── dashboard.py — main vault dashboard
-│ ├── add_password.py — add new password form
-│ ├── password_detail.py — view and reveal password
-│ ├── search.py — search entries
-│ ├── generator.py — password generator
-│ └── settings.py — app settings
-└── docs/
-└── commit-plan.md — team commit guide
+## Supabase Tables
 
-##Team
-Group project — 7 members.
+### users
+
+| Column | Type |
+|---|---|
+| id | uuid |
+| user_id | uuid |
+| key_hash | text |
+| created_at | timestamp |
+
+### passwords
+
+| Column | Type |
+|---|---|
+| id | bigint |
+| user_id | uuid |
+| site_name | text |
+| url | text |
+| username | text |
+| encrypted_password | text |
+| category | text |
+| notes | text |
+| created_at | timestamp |
+
+## User Flow
+
+New user:
+
+```text
+Welcome -> Login/Signup -> Create Master Key -> Confirm Master Key -> Setup Complete -> Dashboard
+```
+
+Returning user:
+
+```text
+Welcome -> Login -> Unlock Vault -> Dashboard
+```
+
+## Branch Workflow
+
+The group uses feature branches.
+
+P1 works on:
+
+```text
+main
+```
+
+Other members work on:
+
+```text
+feature/auth-screens
+feature/welcome-generator
+feature/add-password
+feature/crypto-screens
+feature/search-detail
+feature/style-pass
+```
+
+Create a feature branch:
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b feature/branch-name
+```
+
+Commit changes:
+
+```bash
+git add filename.py
+git commit -m "feat: short description"
+git push -u origin feature/branch-name
+```
+
+P1 merges after review:
+
+```bash
+git checkout main
+git pull origin main
+git merge feature/branch-name
+git push origin main
+```
+
+After P1 merges, everyone pulls latest main into their branch:
+
+```bash
+git checkout feature/your-branch-name
+git pull origin main
+```
+
+## Commit Types
+
+Use:
+
+```text
+feat: new feature or screen
+fix: bug fix
+refactor: code restructuring without behavior change
+style: visual/UI consistency changes
+docs: README or documentation updates
+chore: setup or maintenance changes
+```
+
+## Team Roles
+
+P1: project lead, routing, shared state, database helpers, crypto helpers, merges  
+P2: dashboard and add-password flow  
+P3: final style pass  
+P4: password detail, reveal, decrypt, delete  
+P5: welcome screen and password generator  
+P6: login/signup, create key, confirm key, unlock  
+P7: search, settings, change master key, README

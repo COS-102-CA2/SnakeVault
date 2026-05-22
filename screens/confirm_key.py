@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 
-from db import save_master_key
+from libs.db import save_master_key
 from libs.crypto import hash_key
 from libs.window_manager import BG, BORDER, DANGER, GOLD, MUTED, SUCCESS, SURFACE, SURFACE2, TEXT, FONT, FONT_LG, FONT_TITLE
 

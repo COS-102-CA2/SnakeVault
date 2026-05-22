@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox,simpledialog
-from db import get_master_key
+from libs.db import get_master_key
 from libs.crypto import verify_key
 
 from libs.window_manager import BG, BORDER, GOLD, MUTED, SURFACE, SURFACE2, TEXT, FONT, FONT_LG, FONT_TITLE

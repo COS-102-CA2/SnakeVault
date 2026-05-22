@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 
-from db import get_master_key, logout_user
-from libs.crypto import verify_key
+from db import fetch_user_passwords, get_master_key, logout_user, save_master_key, update_password
+from libs.crypto import decrypt, encrypt, hash_key, verify_key
 from libs.window_manager import BG, BORDER, DANGER, GOLD, MUTED, SURFACE, SURFACE2, TEXT, FONT, FONT_LG, FONT_TITLE
 
 
@@ -177,11 +177,68 @@ class SettingsScreen(tk.Frame):
             self.current_entry.delete(0, tk.END)
             return
 
+        entries = fetch_user_passwords()
+
+        if not entries["success"]:
+            messagebox.showerror(
+                "Update failed",
+                entries.get("error", "Could not load saved passwords."),
+            )
+            return
+
+        for item in entries["data"]:
+            try:
+                plain_password = decrypt(
+                    item.get("encrypted_password", ""),
+                    current,
+                )
+
+                encrypted_password = encrypt(
+                    plain_password,
+                    new_key,
+                )
+            except Exception:
+                messagebox.showerror(
+                    "Update failed",
+                    f"Could not re-encrypt {item.get('site_name', 'one entry')}.",
+                )
+                return
+
+            result = update_password(
+                item.get("id"),
+                item.get("site_name", ""),
+                item.get("url", ""),
+                item.get("username", ""),
+                encrypted_password,
+                item.get("category") or "General",
+                item.get("notes"),
+            )
+
+            if not result["success"]:
+                messagebox.showerror(
+                    "Update failed",
+                    result.get("error", "Could not update one saved password."),
+                )
+                return
+
+        save_result = save_master_key(hash_key(new_key))
+
+        if not save_result["success"]:
+            messagebox.showerror(
+                "Update failed",
+                save_result.get("error", "Could not save the new master key hash."),
+            )
+            return
+
         self.controller.master_key = new_key
 
+        self.current_entry.delete(0, tk.END)
+        self.new_entry.delete(0, tk.END)
+        self.confirm_entry.delete(0, tk.END)
+
         messagebox.showinfo(
-            "Verified",
-            "Current key verified. Re-encryption will be added next.",
+            "Master key updated",
+            "Your master key has been changed.",
         )
 
     def logout(self):

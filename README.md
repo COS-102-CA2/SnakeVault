@@ -146,7 +146,7 @@ chore: setup or maintenance changes
 ## Team Roles
 
 Chinemerem Okolie: project lead, routing, shared state, database helpers, crypto helpers, merges  
-Ozioma Anieke: dashboard and add-password flow  
+Anieke Ozioma: dashboard and add-password flow  
 Ogunremi Temiloluwa: final style pass  
 Zaccheaus Oluwatobiloba: password detail, reveal, decrypt, delete  
 Ohakaba Ebubechukwu: welcome screen and password generator  

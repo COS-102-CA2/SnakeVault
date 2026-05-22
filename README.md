@@ -42,26 +42,26 @@ python main.py
 
 ### users
 
-| Column | Type |
-|---|---|
-| id | uuid |
-| user_id | uuid |
-| key_hash | text |
+| Column     | Type      |
+| ---------- | --------- |
+| id         | uuid      |
+| user_id    | uuid      |
+| key_hash   | text      |
 | created_at | timestamp |
 
 ### passwords
 
-| Column | Type |
-|---|---|
-| id | bigint |
-| user_id | uuid |
-| site_name | text |
-| url | text |
-| username | text |
-| encrypted_password | text |
-| category | text |
-| notes | text |
-| created_at | timestamp |
+| Column             | Type      |
+| ------------------ | --------- |
+| id                 | bigint    |
+| user_id            | uuid      |
+| site_name          | text      |
+| url                | text      |
+| username           | text      |
+| encrypted_password | text      |
+| category           | text      |
+| notes              | text      |
+| created_at         | timestamp |
 
 ## User Flow
 
@@ -81,7 +81,7 @@ Welcome -> Login -> Unlock Vault -> Dashboard
 
 The group uses feature branches.
 
-P1 works on:
+Team Lead works on:
 
 ```text
 main
@@ -114,7 +114,7 @@ git commit -m "feat: short description"
 git push -u origin feature/branch-name
 ```
 
-P1 merges after review:
+Team Lead merges after review:
 
 ```bash
 git checkout main
@@ -123,7 +123,7 @@ git merge feature/branch-name
 git push origin main
 ```
 
-After P1 merges, everyone pulls latest main into their branch:
+After Team Lead merges, everyone pulls latest main into their branch:
 
 ```bash
 git checkout feature/your-branch-name
@@ -145,10 +145,10 @@ chore: setup or maintenance changes
 
 ## Team Roles
 
-P1: project lead, routing, shared state, database helpers, crypto helpers, merges  
-P2: dashboard and add-password flow  
-P3: final style pass  
-P4: password detail, reveal, decrypt, delete  
-P5: welcome screen and password generator  
-P6: login/signup, create key, confirm key, unlock  
-P7: search, settings, change master key, README
+Chinemerem Okolie: project lead, routing, shared state, database helpers, crypto helpers, merges  
+Anieke Ozioma: dashboard and add-password flow  
+Ogunremi Temiloluwa: final style pass  
+Zaccheaus Oluwatobiloba: password detail, reveal, decrypt, delete  
+Ohakaba Ebubechukwu: welcome screen and password generator  
+Moses Abraham: login/signup, create key, confirm key, unlock  
+Ukwu Kelechi: search, settings, change master key, README

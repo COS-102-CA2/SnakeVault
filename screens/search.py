@@ -101,6 +101,16 @@ class SearchScreen(tk.Frame):
         for child in self.result_frame.winfo_children():
             child.destroy()
 
+        if not self.filtered:
+            tk.Label(
+                self.result_frame,
+                text="No results found.",
+                font=FONT,
+                fg=MUTED,
+                bg=SURFACE,
+            ).pack(pady=80)
+            return
+
         for item in self.filtered:
             row = tk.Frame(self.result_frame, bg=SURFACE)
             row.pack(fill="x", padx=18, pady=8)
@@ -138,6 +148,6 @@ class SearchScreen(tk.Frame):
                 padx=10,
                 pady=4,
             ).pack(side="right")
-
+            
     def open_detail(self, entry):
         self.controller.show_screen("password_detail", entry=entry)

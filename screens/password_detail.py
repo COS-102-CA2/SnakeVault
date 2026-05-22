@@ -12,6 +12,7 @@ class PasswordDetailScreen(tk.Frame):
         self.controller = controller
         self.entry_data = entry
         self.verified_key=None
+        self.hide_job = None
 
         top = tk.Frame(self, bg=BG)
         top.pack(fill="x", padx=54, pady=(42, 18))
@@ -161,3 +162,11 @@ class PasswordDetailScreen(tk.Frame):
 
         self.verified_key = entered_key
         self.password_value.configure(text=decrypted_password)
+        if self.hide_job:
+            self.after_cancel(self.hide_job)
+        self.hide_job = self.after(30000, self.hide_password)
+
+        def hide_password(self):
+         self.password_value.configure(text="Hidden until verified")
+         self.verified_key = None
+         self.hide_job = None

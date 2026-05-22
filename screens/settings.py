@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 
-from db import logout_user
+from db import get_master_key, logout_user
+from libs.crypto import verify_key
 from libs.window_manager import BG, BORDER, DANGER, GOLD, MUTED, SURFACE, SURFACE2, TEXT, FONT, FONT_LG, FONT_TITLE
 
 
@@ -134,9 +135,53 @@ class SettingsScreen(tk.Frame):
         return entry
 
     def change_master_key(self):
+        current = self.current_entry.get()
+        new_key = self.new_entry.get()
+        confirm = self.confirm_entry.get()
+
+        if not current or not new_key or not confirm:
+            messagebox.showwarning(
+                "Missing details",
+                "Fill in all master key fields.",
+            )
+            return
+
+        if len(new_key) < 8:
+            messagebox.showwarning(
+                "Weak key",
+                "Use at least 8 characters for the new master key.",
+            )
+            return
+
+        if new_key != confirm:
+            messagebox.showwarning(
+                "Keys do not match",
+                "Confirm the new master key exactly.",
+            )
+            return
+
+        stored = get_master_key()
+
+        if not stored["success"] or not stored["data"]:
+            messagebox.showerror(
+                "Verification failed",
+                stored.get("error", "Could not verify current master key."),
+            )
+            return
+
+        if not verify_key(current, stored["data"]):
+            messagebox.showerror(
+                "Wrong key",
+                "The current master key is incorrect.",
+            )
+            self.current_entry.delete(0, tk.END)
+            return
+
+        self.controller.master_key = new_key
+
         messagebox.showinfo(
-            "Coming next",
-            "Master key update logic will be added in the next commit.",
+            "Verified",
+            "Current key verified. Re-encryption will be added next.",
         )
 
     def logout(self):

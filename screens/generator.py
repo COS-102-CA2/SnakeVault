@@ -26,6 +26,10 @@ class GeneratorScreen(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, bg=BG)
         self.controller = controller
+        
+        if not self.controller.master_key:
+            self.after(0, lambda: self.controller.show_screen("login"))
+            return
 
         self.length_var = tk.IntVar(value=16)
         self.upper_var = tk.BooleanVar(value=True)

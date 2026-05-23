@@ -28,6 +28,11 @@ class PasswordDetailScreen(tk.Frame):
     def __init__(self, parent, controller, entry):
         super().__init__(parent, bg=BG)
         self.controller = controller
+        
+        if not self.controller.master_key:
+            self.after(0, lambda: self.controller.show_screen("login"))
+            return
+
         self.entry_data = entry
         self.verified_key = None
         self.hide_job = None

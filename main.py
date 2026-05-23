@@ -1,17 +1,18 @@
 import tkinter as tk
 
-from screens.welcome import WelcomeScreen
-from screens.login_screen import LoginScreen
-from screens.create_key import CreateKeyScreen
-from screens.confirm_key import ConfirmKeyScreen
-from screens.setup_done import SetupDoneScreen
-from screens.unlock import UnlockScreen
-from screens.dashboard_screen import DashboardScreen
+from libs.window_manager import BG, make_responsive_root
 from screens.add_password import AddPasswordScreen
-from screens.password_detail import PasswordDetailScreen
+from screens.confirm_key import ConfirmKeyScreen
+from screens.create_key import CreateKeyScreen
+from screens.dashboard_screen import DashboardScreen
 from screens.generator import GeneratorScreen
+from screens.login_screen import LoginScreen
+from screens.password_detail import PasswordDetailScreen
 from screens.search import SearchScreen
 from screens.settings import SettingsScreen
+from screens.setup_done import SetupDoneScreen
+from screens.unlock import UnlockScreen
+from screens.welcome import WelcomeScreen
 
 
 class SnakeVaultApp(tk.Tk):
@@ -20,9 +21,10 @@ class SnakeVaultApp(tk.Tk):
 
         self.title("SnakeVault - Password Manager")
         self.geometry("800x550")
-        self.configure(bg="#1E1E2E")
+        make_responsive_root(self)
+        self.configure(bg=BG)
 
-        self.container = tk.Frame(self, bg="#1E1E2E")
+        self.container = tk.Frame(self, bg=BG)
         self.container.pack(fill="both", expand=True)
 
         self.current_screen = None
@@ -49,9 +51,11 @@ class SnakeVaultApp(tk.Tk):
             "settings": lambda: SettingsScreen(self.container, self),
         }
 
-        if screen_name in screens:
-            self.current_screen = screens[screen_name]()
-            self.current_screen.pack(fill="both", expand=True)
+        if screen_name not in screens:
+            raise ValueError(f"Unknown screen: {screen_name}")
+
+        self.current_screen = screens[screen_name]()
+        self.current_screen.pack(fill="both", expand=True)
 
 
 if __name__ == "__main__":

@@ -17,6 +17,7 @@ from libs.window_manager import (
     PAD_X,
     SURFACE,
     TEXT,
+    ScrollableFrame,
     make_button,
     make_card,
     make_entry,
@@ -28,7 +29,7 @@ class SettingsScreen(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, bg=BG)
         self.controller = controller
-        
+
         if not self.controller.master_key:
             self.after(0, lambda: self.controller.show_screen("login"))
             return
@@ -36,6 +37,10 @@ class SettingsScreen(tk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
 
+        self.build_header()
+        self.build_settings()
+
+    def build_header(self):
         top = tk.Frame(self, bg=BG)
         top.grid(row=0, column=0, sticky="ew", padx=PAD_X, pady=(42, 18))
         top.columnconfigure(0, weight=1)
@@ -48,23 +53,34 @@ class SettingsScreen(tk.Frame):
             bg=BG,
         ).grid(row=0, column=0, sticky="w")
 
-        make_button(top, "Back", lambda: controller.show_screen("dashboard"), variant="secondary").grid(
-            row=0,
-            column=1,
-            sticky="e",
-            ipadx=18,
-            ipady=7,
-        )
+        make_button(
+            top,
+            "Back",
+            lambda: self.controller.show_screen("dashboard"),
+            variant="secondary",
+        ).grid(row=0, column=1, sticky="e", ipadx=18, ipady=7)
 
-        card = make_card(self)
-        card.grid(row=1, column=0, sticky="nsew", padx=PAD_X, pady=(0, 42))
+    def build_settings(self):
+        scroll = ScrollableFrame(self, bg=BG)
+        scroll.grid(row=1, column=0, sticky="nsew", padx=PAD_X, pady=(0, 42))
+        scroll.content.columnconfigure(0, weight=1)
+
+        card = make_card(scroll.content)
+        card.grid(row=0, column=0, sticky="ew")
         card.columnconfigure(0, weight=1)
 
         body = tk.Frame(card, bg=SURFACE)
-        body.grid(row=0, column=0, sticky="nsew", padx=24, pady=24)
+        body.grid(row=0, column=0, sticky="ew", padx=24, pady=24)
         body.columnconfigure(0, weight=1)
 
-        tk.Label(body, text="Change master key", font=FONT_LG, fg=TEXT, bg=SURFACE).grid(row=0, column=0, sticky="w")
+        tk.Label(
+            body,
+            text="Change master key",
+            font=FONT_LG,
+            fg=TEXT,
+            bg=SURFACE,
+        ).grid(row=0, column=0, sticky="w")
+
         tk.Label(
             body,
             text="Changing the key will re-encrypt your saved passwords before updating Supabase.",
@@ -84,9 +100,19 @@ class SettingsScreen(tk.Frame):
             font=FONT_LG,
         ).grid(row=8, column=0, sticky="e", pady=(8, 24), ipadx=26, ipady=9)
 
-        tk.Frame(body, bg=BORDER, height=1).grid(row=9, column=0, sticky="ew", pady=(4, 18))
+        tk.Frame(
+            body,
+            bg=BORDER,
+            height=1,
+        ).grid(row=9, column=0, sticky="ew", pady=(4, 18))
 
-        tk.Label(body, text="Session", font=FONT_LG, fg=TEXT, bg=SURFACE).grid(row=10, column=0, sticky="w")
+        tk.Label(
+            body,
+            text="Session",
+            font=FONT_LG,
+            fg=TEXT,
+            bg=SURFACE,
+        ).grid(row=10, column=0, sticky="w")
 
         make_button(
             body,
@@ -96,9 +122,22 @@ class SettingsScreen(tk.Frame):
         ).grid(row=11, column=0, sticky="w", pady=(12, 0), ipadx=24, ipady=9)
 
     def add_field(self, parent, label, row):
-        make_field_label(parent, label).grid(row=row, column=0, sticky="ew", pady=(0, 6))
+        make_field_label(parent, label).grid(
+            row=row,
+            column=0,
+            sticky="ew",
+            pady=(0, 6),
+        )
+
         entry = make_entry(parent, show="*")
-        entry.grid(row=row + 1, column=0, sticky="ew", ipady=8, pady=(0, 12))
+        entry.grid(
+            row=row + 1,
+            column=0,
+            sticky="ew",
+            ipady=8,
+            pady=(0, 12),
+        )
+
         return entry
 
     def change_master_key(self):
@@ -107,40 +146,64 @@ class SettingsScreen(tk.Frame):
         confirm = self.confirm_entry.get()
 
         if not current or not new_key or not confirm:
-            messagebox.showwarning("Missing details", "Fill in all master key fields.")
+            messagebox.showwarning(
+                "Missing details",
+                "Fill in all master key fields.",
+            )
             return
 
         if len(new_key) < 8:
-            messagebox.showwarning("Weak key", "Use at least 8 characters for the new master key.")
+            messagebox.showwarning(
+                "Weak key",
+                "Use at least 8 characters for the new master key.",
+            )
             return
 
         if new_key != confirm:
-            messagebox.showwarning("Keys do not match", "Confirm the new master key exactly.")
+            messagebox.showwarning(
+                "Keys do not match",
+                "Confirm the new master key exactly.",
+            )
             return
 
         stored = get_master_key()
 
         if not stored["success"] or not stored["data"]:
-            messagebox.showerror("Verification failed", stored.get("error", "Could not verify current master key."))
+            messagebox.showerror(
+                "Verification failed",
+                stored.get("error", "Could not verify current master key."),
+            )
             return
 
         if not verify_key(current, stored["data"]):
-            messagebox.showerror("Wrong key", "The current master key is incorrect.")
+            messagebox.showerror(
+                "Wrong key",
+                "The current master key is incorrect.",
+            )
             self.current_entry.delete(0, tk.END)
             return
 
         entries = fetch_user_passwords()
 
         if not entries["success"]:
-            messagebox.showerror("Update failed", entries.get("error", "Could not load saved passwords."))
+            messagebox.showerror(
+                "Update failed",
+                entries.get("error", "Could not load saved passwords."),
+            )
             return
 
         for item in entries["data"]:
             try:
-                plain_password = decrypt(item.get("encrypted_password", ""), current)
+                plain_password = decrypt(
+                    item.get("encrypted_password", ""),
+                    current,
+                )
                 encrypted_password = encrypt(plain_password, new_key)
             except Exception:
-                messagebox.showerror("Update failed", f"Could not re-encrypt {item.get('site_name', 'one entry')}.")
+                messagebox.showerror(
+                    "Update failed",
+                    f"Could not re-encrypt {item.get('site_name', 'one entry')}.",
+                )
                 return
 
             result = update_password(
@@ -154,13 +217,19 @@ class SettingsScreen(tk.Frame):
             )
 
             if not result["success"]:
-                messagebox.showerror("Update failed", result.get("error", "Could not update one saved password."))
+                messagebox.showerror(
+                    "Update failed",
+                    result.get("error", "Could not update one saved password."),
+                )
                 return
 
         save_result = save_master_key(hash_key(new_key))
 
         if not save_result["success"]:
-            messagebox.showerror("Update failed", save_result.get("error", "Could not save the new master key hash."))
+            messagebox.showerror(
+                "Update failed",
+                save_result.get("error", "Could not save the new master key hash."),
+            )
             return
 
         self.controller.master_key = new_key
@@ -169,7 +238,10 @@ class SettingsScreen(tk.Frame):
         self.new_entry.delete(0, tk.END)
         self.confirm_entry.delete(0, tk.END)
 
-        messagebox.showinfo("Master key updated", "Your master key has been changed.")
+        messagebox.showinfo(
+            "Master key updated",
+            "Your master key has been changed.",
+        )
 
     def logout(self):
         logout_user()

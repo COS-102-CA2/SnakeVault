@@ -5,18 +5,17 @@ from tkinter import messagebox
 
 from libs.window_manager import (
     BG,
-    BORDER,
     FONT,
     FONT_LG,
     FONT_MONO,
     FONT_TITLE,
     GOLD,
     ICON_GENERATOR,
-    MUTED,
     PAD_X,
     SURFACE,
     SURFACE2,
     TEXT,
+    ScrollableFrame,
     make_button,
     make_card,
 )
@@ -26,7 +25,7 @@ class GeneratorScreen(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, bg=BG)
         self.controller = controller
-        
+
         if not self.controller.master_key:
             self.after(0, lambda: self.controller.show_screen("login"))
             return
@@ -41,6 +40,10 @@ class GeneratorScreen(tk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
 
+        self.build_header()
+        self.build_generator()
+
+    def build_header(self):
         top = tk.Frame(self, bg=BG)
         top.grid(row=0, column=0, sticky="ew", padx=PAD_X, pady=(42, 18))
         top.columnconfigure(0, weight=1)
@@ -56,19 +59,30 @@ class GeneratorScreen(tk.Frame):
         make_button(
             top,
             "Back",
-            lambda: controller.show_screen("dashboard"),
+            lambda: self.controller.show_screen("dashboard"),
             variant="secondary",
         ).grid(row=0, column=1, sticky="e", ipadx=18, ipady=7)
 
-        card = make_card(self)
-        card.grid(row=1, column=0, sticky="nsew", padx=PAD_X, pady=(0, 42))
+    def build_generator(self):
+        scroll = ScrollableFrame(self, bg=BG)
+        scroll.grid(row=1, column=0, sticky="nsew", padx=PAD_X, pady=(0, 42))
+        scroll.content.columnconfigure(0, weight=1)
+
+        card = make_card(scroll.content)
+        card.grid(row=0, column=0, sticky="ew")
         card.columnconfigure(0, weight=1)
 
         body = tk.Frame(card, bg=SURFACE)
-        body.grid(row=0, column=0, sticky="nsew", padx=24, pady=24)
+        body.grid(row=0, column=0, sticky="ew", padx=24, pady=24)
         body.columnconfigure(0, weight=1)
 
-        tk.Label(body, text="Length", font=FONT_LG, fg=TEXT, bg=SURFACE).grid(row=0, column=0, sticky="w")
+        tk.Label(
+            body,
+            text="Length",
+            font=FONT_LG,
+            fg=TEXT,
+            bg=SURFACE,
+        ).grid(row=0, column=0, sticky="w")
 
         length_row = tk.Frame(body, bg=SURFACE)
         length_row.grid(row=1, column=0, sticky="ew", pady=(8, 18))
@@ -86,7 +100,14 @@ class GeneratorScreen(tk.Frame):
             highlightthickness=0,
         ).grid(row=0, column=0, sticky="ew")
 
-        tk.Label(length_row, textvariable=self.length_var, width=4, font=FONT_LG, fg=GOLD, bg=SURFACE).grid(row=0, column=1)
+        tk.Label(
+            length_row,
+            textvariable=self.length_var,
+            width=4,
+            font=FONT_LG,
+            fg=GOLD,
+            bg=SURFACE,
+        ).grid(row=0, column=1)
 
         options = tk.Frame(body, bg=SURFACE)
         options.grid(row=2, column=0, sticky="ew", pady=(0, 20))
@@ -109,8 +130,19 @@ class GeneratorScreen(tk.Frame):
         actions = tk.Frame(body, bg=SURFACE)
         actions.grid(row=4, column=0, sticky="ew", pady=(20, 0))
 
-        make_button(actions, "Generate", self.generate, font=FONT_LG).pack(side="left", ipadx=28, ipady=9)
-        make_button(actions, "Copy", self.copy, variant="secondary").pack(side="left", padx=10, ipadx=24, ipady=9)
+        make_button(
+            actions,
+            "Generate",
+            self.generate,
+            font=FONT_LG,
+        ).pack(side="left", ipadx=28, ipady=9)
+
+        make_button(
+            actions,
+            "Copy",
+            self.copy,
+            variant="secondary",
+        ).pack(side="left", padx=10, ipadx=24, ipady=9)
 
     def add_check(self, parent, text, variable):
         tk.Checkbutton(
@@ -127,29 +159,48 @@ class GeneratorScreen(tk.Frame):
 
     def generate(self):
         pools = []
+
         if self.upper_var.get():
             pools.append(string.ascii_uppercase)
+
         if self.lower_var.get():
             pools.append(string.ascii_lowercase)
+
         if self.number_var.get():
             pools.append(string.digits)
+
         if self.symbol_var.get():
             pools.append("!@#$%^&*()-_=+[]{};:,.?")
 
         if not pools:
-            messagebox.showwarning("No character types", "Select at least one character type.")
+            messagebox.showwarning(
+                "No character types",
+                "Select at least one character type.",
+            )
             return
 
         alphabet = "".join(pools)
-        password = "".join(secrets.choice(alphabet) for _ in range(self.length_var.get()))
+        password = "".join(
+            secrets.choice(alphabet)
+            for _ in range(self.length_var.get())
+        )
+
         self.generated_var.set(password)
 
     def copy(self):
         password = self.generated_var.get()
+
         if not password:
-            messagebox.showwarning("Nothing to copy", "Generate a password before copying.")
+            messagebox.showwarning(
+                "Nothing to copy",
+                "Generate a password before copying.",
+            )
             return
 
         self.clipboard_clear()
         self.clipboard_append(password)
-        messagebox.showinfo("Copied", "Generated password copied to clipboard.")
+
+        messagebox.showinfo(
+            "Copied",
+            "Generated password copied to clipboard.",
+        )

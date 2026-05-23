@@ -7,7 +7,6 @@ from libs.db import save_password
 from libs.crypto import encrypt
 from libs.window_manager import (
     BG,
-    BORDER,
     CARD_PAD_X,
     CARD_PAD_Y,
     FONT,
@@ -29,14 +28,9 @@ from libs.window_manager import (
 
 
 class AddPasswordScreen(tk.Frame):
-    def _init_(self, parent, controller):
-        super()._init_(parent, bg=BG)
+    def __init__(self, parent, controller):
+        super().__init__(parent, bg=BG)
         self.controller = controller
-
-        if not self.controller.master_key:
-            self.after(0, lambda: self.controller.show_screen("login"))
-            return
-            
         self.show_password = False
 
         if not self.controller.master_key:
@@ -82,13 +76,19 @@ class AddPasswordScreen(tk.Frame):
 
         self.site_entry = self.add_field(form, "Site name", 0, 0)
         self.url_entry = self.add_field(form, "URL", 0, 1)
-        self.username_entry = self.add_field(form, "Username or email", 1, 0)
-        self.category_entry = self.add_field(form, "Category", 1, 1, default="General")
+        self.username_entry = self.add_field(form, "Username or email", 2, 0)
+        self.category_entry = self.add_field(form, "Category", 2, 1, default="General")
 
-        make_field_label(form, "Password").grid(row=2, column=0, columnspan=2, sticky="ew", pady=(8, 6))
+        make_field_label(form, "Password").grid(
+            row=4,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            pady=(8, 6),
+        )
 
         password_row = tk.Frame(form, bg=SURFACE)
-        password_row.grid(row=3, column=0, columnspan=2, sticky="ew")
+        password_row.grid(row=5, column=0, columnspan=2, sticky="ew")
         password_row.columnconfigure(0, weight=1)
 
         self.password_entry = make_entry(password_row, show="*")
@@ -108,7 +108,13 @@ class AddPasswordScreen(tk.Frame):
             variant="primary",
         ).grid(row=0, column=2, padx=(8, 0), ipadx=16, ipady=7)
 
-        make_field_label(form, "Notes").grid(row=4, column=0, columnspan=2, sticky="ew", pady=(14, 6))
+        make_field_label(form, "Notes").grid(
+            row=6,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            pady=(14, 6),
+        )
 
         self.notes_entry = tk.Text(
             form,
@@ -120,11 +126,11 @@ class AddPasswordScreen(tk.Frame):
             relief="flat",
             wrap="word",
         )
-        self.notes_entry.grid(row=5, column=0, columnspan=2, sticky="nsew")
-        form.rowconfigure(5, weight=1)
+        self.notes_entry.grid(row=7, column=0, columnspan=2, sticky="nsew")
+        form.rowconfigure(7, weight=1)
 
         actions = tk.Frame(form, bg=SURFACE)
-        actions.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(18, 0))
+        actions.grid(row=8, column=0, columnspan=2, sticky="ew", pady=(18, 0))
         actions.columnconfigure(0, weight=1)
 
         tk.Label(
@@ -144,10 +150,23 @@ class AddPasswordScreen(tk.Frame):
         ).grid(row=0, column=1, sticky="e", ipadx=28, ipady=9)
 
     def add_field(self, parent, label, row, column, default=""):
-        make_field_label(parent, label).grid(row=row * 2, column=column, sticky="ew", pady=(0, 6), padx=(0, 10))
+        make_field_label(parent, label).grid(
+            row=row,
+            column=column,
+            sticky="ew",
+            pady=(0, 6),
+            padx=(0, 10),
+        )
 
         entry = make_entry(parent)
-        entry.grid(row=row * 2 + 1, column=column, sticky="ew", ipady=8, padx=(0, 10), pady=(0, 10))
+        entry.grid(
+            row=row + 1,
+            column=column,
+            sticky="ew",
+            ipady=8,
+            padx=(0, 10),
+            pady=(0, 10),
+        )
 
         if default:
             entry.insert(0, default)
@@ -192,10 +211,7 @@ class AddPasswordScreen(tk.Frame):
         )
 
         if result["success"]:
-            messagebox.showinfo(
-                "Saved",
-                "Credential saved securely.",
-            )
+            messagebox.showinfo("Saved", "Credential saved securely.")
             self.controller.show_screen("dashboard")
         else:
             messagebox.showerror(

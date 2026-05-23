@@ -34,10 +34,6 @@ class SearchScreen(tk.Frame):
         self.entries = []
         self.filtered = []
 
-        if not self.controller.master_key:
-            self.after(0, lambda: self.controller.show_screen("login"))
-            return
-
         self.columnconfigure(0, weight=1)
         self.rowconfigure(2, weight=1)
 

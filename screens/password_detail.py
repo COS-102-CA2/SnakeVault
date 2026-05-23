@@ -1,9 +1,27 @@
 import tkinter as tk
-from tkinter import messagebox,simpledialog
-from libs.db import get_master_key, delete_password
-from libs.crypto import verify_key, decrypt
+from tkinter import messagebox, simpledialog
 
-from libs.window_manager import BG, BORDER, DANGER, GOLD, MUTED, SURFACE, SURFACE2, TEXT, FONT, FONT_LG, FONT_TITLE
+from db import delete_password, get_master_key
+from libs.crypto import decrypt, verify_key
+from libs.window_manager import (
+    BG,
+    BORDER,
+    DANGER,
+    FONT,
+    FONT_LG,
+    FONT_TITLE,
+    GOLD,
+    ICON_COPY,
+    ICON_DELETE,
+    ICON_KEY,
+    MUTED,
+    PAD_X,
+    SURFACE,
+    SURFACE2,
+    TEXT,
+    make_button,
+    make_card,
+)
 
 
 class PasswordDetailScreen(tk.Frame):
@@ -11,88 +29,70 @@ class PasswordDetailScreen(tk.Frame):
         super().__init__(parent, bg=BG)
         self.controller = controller
         self.entry_data = entry
-        self.verified_key=None
+        self.verified_key = None
         self.hide_job = None
 
+        if not self.controller.master_key:
+            self.after(0, lambda: self.controller.show_screen("login"))
+            return
+
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+
         top = tk.Frame(self, bg=BG)
-        top.pack(fill="x", padx=54, pady=(42, 18))
+        top.grid(row=0, column=0, sticky="ew", padx=PAD_X, pady=(42, 18))
+        top.columnconfigure(0, weight=1)
 
         tk.Label(
             top,
-            text="Password Details",
+            text=f"{ICON_KEY} Password Details",
             font=FONT_TITLE,
             fg=GOLD,
             bg=BG,
-        ).pack(side="left")
+        ).grid(row=0, column=0, sticky="w")
 
-        tk.Button(
+        make_button(
             top,
-            text="Back",
-            font=FONT,
-            bg=SURFACE2,
-            fg=TEXT,
-            bd=0,
-            command=lambda: controller.show_screen("dashboard"),
-        ).pack(side="right", ipadx=18, ipady=7)
+            "Back",
+            lambda: controller.show_screen("dashboard"),
+            variant="secondary",
+        ).grid(row=0, column=1, sticky="e", ipadx=18, ipady=7)
 
-        card = tk.Frame(
-            self,
-            bg=SURFACE,
-            highlightbackground=BORDER,
-            highlightthickness=1,
-        )
-        card.pack(fill="both", expand=True, padx=54, pady=(0, 42))
+        card = make_card(self)
+        card.grid(row=1, column=0, sticky="nsew", padx=PAD_X, pady=(0, 42))
+        card.columnconfigure(0, weight=1)
 
         body = tk.Frame(card, bg=SURFACE)
-        body.pack(fill="both", expand=True, padx=24, pady=24)
+        body.grid(row=0, column=0, sticky="nsew", padx=24, pady=24)
+        body.columnconfigure(0, weight=1)
 
         self.add_display(body, "Site", entry.get("site_name", ""), can_copy=True)
         self.add_display(body, "URL", entry.get("url", ""), can_copy=True)
         self.add_display(body, "Username", entry.get("username", ""), can_copy=True)
-        self.password_value = self.add_display(
-            body,
-            "Password",
-            "Hidden until verified",
-            can_copy=True,
-        )
+        self.password_value = self.add_display(body, "Password", "Hidden until verified", can_copy=True)
         self.add_display(body, "Category", entry.get("category", "General"))
         self.add_display(body, "Notes", entry.get("notes", ""))
 
         actions = tk.Frame(body, bg=SURFACE)
-        tk.Button(
-            actions,
-            text="Delete",
-            font=FONT,
-            bg=DANGER,
-            fg="#11111b",
-            bd=0,
-            command=self.delete_entry,
-        ).pack(side="right", ipadx=22, ipady=9)
+        actions.grid(row=12, column=0, sticky="ew", pady=(18, 0))
+        actions.columnconfigure(0, weight=1)
 
-        actions.pack(fill="x", pady=(20, 0))
-
-        tk.Button(
-            actions,
-            text="Reveal password",
-            font=FONT_LG,
-            bg=GOLD,
-            fg="#161622",
-            bd=0,
-            command=self.verify_before_reveal,
-        ).pack(side="left", ipadx=24, ipady=9)
+        make_button(actions, "Reveal password", self.verify_before_reveal, font=FONT_LG).grid(row=0, column=0, sticky="w", ipadx=24, ipady=9)
+        make_button(actions, f"{ICON_DELETE} Delete", self.delete_entry, variant="danger").grid(row=0, column=1, sticky="e", ipadx=22, ipady=9)
 
     def add_display(self, parent, label, value, can_copy=False):
-        tk.Label(
-            parent,
-            text=label,
-            font=FONT,
-            fg=MUTED,
-            bg=SURFACE,
-            anchor="w",
-        ).pack(fill="x")
+        row_index = len(parent.grid_slaves())
+
+        tk.Label(parent, text=label, font=FONT, fg=MUTED, bg=SURFACE, anchor="w").grid(
+            row=row_index,
+            column=0,
+            sticky="ew",
+            pady=(0, 5),
+        )
 
         row = tk.Frame(parent, bg=SURFACE)
-        row.pack(fill="x", pady=(5, 12))
+        row.grid(row=row_index + 1, column=0, sticky="ew", pady=(0, 12))
+        row.columnconfigure(0, weight=1)
 
         value_label = tk.Label(
             row,
@@ -104,33 +104,17 @@ class PasswordDetailScreen(tk.Frame):
             padx=12,
             pady=8,
         )
-        value_label.pack(side="left", fill="x", expand=True)
+        value_label.grid(row=0, column=0, sticky="ew")
 
         if can_copy:
-            tk.Button(
+            make_button(
                 row,
-                text="Copy",
-                font=FONT,
-                bg=SURFACE2,
-                fg=TEXT,
-                bd=0,
-                command=lambda: self.copy_value(value_label.cget("text")),
-            ).pack(side="left", padx=(8, 0), ipadx=12, ipady=8)
+                f"{ICON_COPY} Copy",
+                lambda: self.copy_value(value_label.cget("text")),
+                variant="secondary",
+            ).grid(row=0, column=1, padx=(8, 0), ipadx=12, ipady=8)
 
         return value_label
-
-    def copy_value(self, value):
-        if not value or value == "-" or value == "Hidden until verified":
-            return
-
-        self.clipboard_clear()
-        self.clipboard_append(value)
-
-        messagebox.showinfo(
-            "Copied",
-            "Value copied to clipboard.",
-        )
-
 
     def verify_before_reveal(self):
         entered_key = simpledialog.askstring(
@@ -146,58 +130,49 @@ class PasswordDetailScreen(tk.Frame):
         result = get_master_key()
 
         if not result["success"] or not result["data"]:
-            messagebox.showerror(
-                "Verification failed",
-                result.get("error", "Could not verify master key."),
-            )
+            messagebox.showerror("Verification failed", result.get("error", "Could not verify master key."))
             return
 
         if not verify_key(entered_key, result["data"]):
-            messagebox.showerror(
-                "Wrong key",
-                "Incorrect master key.",
-            )
+            messagebox.showerror("Wrong key", "Incorrect master key.")
             return
 
         try:
-            decrypted_password = decrypt(
-                self.entry_data.get("encrypted_password", ""),
-                entered_key,
-            )
+            decrypted_password = decrypt(self.entry_data.get("encrypted_password", ""), entered_key)
         except Exception:
-            messagebox.showerror(
-                "Decrypt failed",
-                "Could not decrypt this password with the supplied key.",
-            )
+            messagebox.showerror("Decrypt failed", "Could not decrypt this password with the supplied key.")
             return
 
         self.verified_key = entered_key
         self.password_value.configure(text=decrypted_password)
+
         if self.hide_job:
             self.after_cancel(self.hide_job)
+
         self.hide_job = self.after(30000, self.hide_password)
 
-        def hide_password(self):
-         self.password_value.configure(text="Hidden until verified")
-         self.verified_key = None
-         self.hide_job = None
+    def hide_password(self):
+        self.password_value.configure(text="Hidden until verified")
+        self.verified_key = None
+        self.hide_job = None
 
-
-        def delete_entry(self):
-         confirm = messagebox.askyesno(
-            "Delete password",
-            "Delete this saved credential?",
-        )
-
-         if not confirm:
+    def copy_value(self, value):
+        if not value or value == "-" or value == "Hidden until verified":
             return
 
-         result = delete_password(self.entry_data.get("id"))
+        self.clipboard_clear()
+        self.clipboard_append(value)
+        messagebox.showinfo("Copied", "Value copied to clipboard.")
 
-         if result["success"]:
+    def delete_entry(self):
+        confirm = messagebox.askyesno("Delete password", "Delete this saved credential?")
+
+        if not confirm:
+            return
+
+        result = delete_password(self.entry_data.get("id"))
+
+        if result["success"]:
             self.controller.show_screen("dashboard")
-         else:
-            messagebox.showerror(
-                "Delete failed",
-                result.get("error", "Could not delete credential."),
-            )
+        else:
+            messagebox.showerror("Delete failed", result.get("error", "Could not delete credential."))

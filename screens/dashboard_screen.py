@@ -23,6 +23,7 @@ from libs.window_manager import (
     SURFACE,
     SURFACE2,
     TEXT,
+    ScrollableFrame,
     clear_frame,
     make_button,
 )
@@ -134,7 +135,7 @@ class DashboardScreen(tk.Frame):
         stats.columnconfigure(3, weight=1)
 
         self.total_value = self.stat_card(stats, 0, ICON_KEY, "0", "Total")
-        self.weak_value = self.stat_card(stats, 1, "⚠", "0", "Weak")
+        self.protected_value = self.stat_card(stats, 1, ICON_LOCK, "0", "Protected")
         self.category_value = self.stat_card(stats, 2, ICON_FOLDER, "0", "Categories")
         self.updated_value = self.stat_card(stats, 3, ICON_CLOCK, "Today", "Updated")
 
@@ -162,13 +163,18 @@ class DashboardScreen(tk.Frame):
             variant="secondary",
         ).grid(row=0, column=1, sticky="e", ipadx=14, ipady=6)
 
+        self.scroll = ScrollableFrame(header, bg=SURFACE)
+        self.scroll.grid(row=1, column=0, sticky="nsew")
+        self.scroll.content.columnconfigure(0, weight=1)
+
         self.list_frame = tk.Frame(
-            header,
+            self.scroll.content,
             bg=SURFACE,
             highlightbackground=BORDER,
             highlightthickness=1,
         )
-        self.list_frame.grid(row=1, column=0, sticky="nsew")
+        self.list_frame.grid(row=0, column=0, sticky="ew")
+        self.list_frame.columnconfigure(0, weight=1)
 
         footer = tk.Frame(self.main, bg=BG)
         footer.grid(row=4, column=0, sticky="ew", pady=(12, 0))
@@ -176,7 +182,7 @@ class DashboardScreen(tk.Frame):
 
         make_button(
             footer,
-            "View all →",
+            "View all ->",
             lambda: self.controller.show_screen("search"),
             variant="secondary",
         ).grid(row=0, column=1, ipadx=24, ipady=8, padx=(0, 10))
@@ -198,7 +204,13 @@ class DashboardScreen(tk.Frame):
         )
         card.grid(row=0, column=column, sticky="ew", padx=(0, 10), ipady=10)
 
-        tk.Label(card, text=icon, font=FONT_LG, fg=GOLD, bg=SURFACE).pack()
+        tk.Label(
+            card,
+            text=icon,
+            font=FONT_LG,
+            fg=GOLD,
+            bg=SURFACE,
+        ).pack()
 
         value_label = tk.Label(
             card,
@@ -209,7 +221,13 @@ class DashboardScreen(tk.Frame):
         )
         value_label.pack()
 
-        tk.Label(card, text=label, font=FONT, fg=MUTED, bg=SURFACE).pack()
+        tk.Label(
+            card,
+            text=label,
+            font=FONT,
+            fg=MUTED,
+            bg=SURFACE,
+        ).pack()
 
         return value_label
 
@@ -232,14 +250,9 @@ class DashboardScreen(tk.Frame):
             item.get("category") or "General"
             for item in self.entries
         }
-        weak = sum(
-            1
-            for item in self.entries
-            if "weak" in (item.get("notes") or "").lower()
-        )
 
         self.total_value.configure(text=str(total))
-        self.weak_value.configure(text=str(weak))
+        self.protected_value.configure(text=str(total))
         self.category_value.configure(text=str(len(categories)))
         self.entry_count.configure(text=f"{total} entries")
 
@@ -250,19 +263,20 @@ class DashboardScreen(tk.Frame):
                 font=FONT,
                 fg=MUTED,
                 bg=SURFACE,
-            ).pack(pady=80)
+            ).grid(row=0, column=0, pady=80)
             return
 
-        for item in self.entries[:8]:
-            self.add_entry_row(item)
+        for row_index, item in enumerate(self.entries):
+            self.add_entry_row(item, row_index)
 
-    def add_entry_row(self, item):
+    def add_entry_row(self, item, row_index):
         row = tk.Frame(
             self.list_frame,
             bg=SURFACE,
             cursor="hand2",
         )
-        row.pack(fill="x", padx=18, pady=8)
+        row.grid(row=row_index, column=0, sticky="ew", padx=18, pady=8)
+        row.columnconfigure(1, weight=1)
 
         row.bind("<Button-1>", lambda _event: self.open_detail(item))
         row.bind("<Enter>", lambda _event: row.configure(bg=SURFACE2))
@@ -275,28 +289,25 @@ class DashboardScreen(tk.Frame):
             fg=GOLD,
             bg=SURFACE,
         )
-        icon.pack(side="left", padx=(0, 12))
-
-        text = tk.Frame(row, bg=SURFACE)
-        text.pack(side="left", fill="x", expand=True)
+        icon.grid(row=0, column=0, rowspan=2, padx=(0, 12), sticky="w")
 
         site_label = tk.Label(
-            text,
+            row,
             text=item.get("site_name", "Untitled"),
             font=FONT_LG,
             fg=TEXT,
             bg=SURFACE,
         )
-        site_label.pack(anchor="w")
+        site_label.grid(row=0, column=1, sticky="w")
 
         user_label = tk.Label(
-            text,
+            row,
             text=item.get("username", ""),
             font=FONT,
             fg=MUTED,
             bg=SURFACE,
         )
-        user_label.pack(anchor="w")
+        user_label.grid(row=1, column=1, sticky="w")
 
         category = item.get("category") or "General"
 
@@ -309,9 +320,9 @@ class DashboardScreen(tk.Frame):
             padx=10,
             pady=4,
         )
-        category_label.pack(side="right")
+        category_label.grid(row=0, column=2, rowspan=2, sticky="e")
 
-        for widget in (icon, text, site_label, user_label, category_label):
+        for widget in (icon, site_label, user_label, category_label):
             widget.bind("<Button-1>", lambda _event: self.open_detail(item))
 
     def open_detail(self, entry):

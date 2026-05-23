@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 
-from db import delete_password, get_master_key
+from libs.db import delete_password, get_master_key
 from libs.crypto import decrypt, verify_key
 from libs.window_manager import (
     BG,

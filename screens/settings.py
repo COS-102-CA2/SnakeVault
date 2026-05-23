@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 
-from db import fetch_user_passwords, get_master_key, logout_user, save_master_key, update_password
+from libs.db import fetch_user_passwords, get_master_key, logout_user, save_master_key, update_password
 from libs.crypto import decrypt, encrypt, hash_key, verify_key
 from libs.window_manager import (
     BG,

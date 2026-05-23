@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 
-from db import get_master_key
+from libs.db import get_master_key
 from libs.crypto import verify_key
 from libs.window_manager import BG, BORDER, DANGER, FONT, FONT_LG, FONT_TITLE, GOLD, ICON_LOCK, MUTED, PAD_X, SURFACE, TEXT, make_button, make_card, make_entry, make_field_label
 

@@ -201,13 +201,20 @@ class ScrollableFrame(tk.Frame):
 
         self.content.bind("<Configure>", self.update_scroll_region)
         self.canvas.bind("<Configure>", self.resize_content)
-        self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
+        self.canvas.bind("<Enter>", self.bind_mousewheel)
+        self.canvas.bind("<Leave>", self.unbind_mousewheel)
 
     def update_scroll_region(self, _event=None):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def resize_content(self, event):
         self.canvas.itemconfigure(self.window_id, width=event.width)
+
+    def bind_mousewheel(self, _event=None):
+        self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
+
+    def unbind_mousewheel(self, _event=None):
+        self.canvas.unbind_all("<MouseWheel>")
 
     def on_mousewheel(self, event):
         self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")

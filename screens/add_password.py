@@ -13,6 +13,8 @@ from libs.window_manager import (
     FONT_LG,
     FONT_TITLE,
     GOLD,
+    ICON_EYE,
+    ICON_EYE_OFF,
     ICON_GENERATOR,
     ICON_PLUS,
     MUTED,
@@ -20,6 +22,7 @@ from libs.window_manager import (
     SURFACE,
     SURFACE2,
     TEXT,
+    ScrollableFrame,
     make_button,
     make_card,
     make_entry,
@@ -64,13 +67,16 @@ class AddPasswordScreen(tk.Frame):
         ).grid(row=0, column=1, sticky="e", ipadx=18, ipady=7)
 
     def build_form(self):
-        card = make_card(self)
-        card.grid(row=1, column=0, sticky="nsew", padx=PAD_X, pady=(0, 24))
+        scroll = ScrollableFrame(self, bg=BG)
+        scroll.grid(row=1, column=0, sticky="nsew", padx=PAD_X, pady=(0, 24))
+        scroll.content.columnconfigure(0, weight=1)
+
+        card = make_card(scroll.content)
+        card.grid(row=0, column=0, sticky="ew")
         card.columnconfigure(0, weight=1)
-        card.rowconfigure(0, weight=1)
 
         form = tk.Frame(card, bg=SURFACE)
-        form.grid(row=0, column=0, sticky="nsew", padx=CARD_PAD_X, pady=CARD_PAD_Y)
+        form.grid(row=0, column=0, sticky="ew", padx=CARD_PAD_X, pady=CARD_PAD_Y)
         form.columnconfigure(0, weight=1)
         form.columnconfigure(1, weight=1)
 
@@ -94,12 +100,13 @@ class AddPasswordScreen(tk.Frame):
         self.password_entry = make_entry(password_row, show="*")
         self.password_entry.grid(row=0, column=0, sticky="ew", ipady=8)
 
-        make_button(
+        self.toggle_btn = make_button(
             password_row,
-            "Show",
+            f"{ICON_EYE} Show",
             self.toggle_password,
             variant="secondary",
-        ).grid(row=0, column=1, padx=(8, 0), ipadx=12, ipady=7)
+        )
+        self.toggle_btn.grid(row=0, column=1, padx=(8, 0), ipadx=12, ipady=7)
 
         make_button(
             password_row,
@@ -118,7 +125,7 @@ class AddPasswordScreen(tk.Frame):
 
         self.notes_entry = tk.Text(
             form,
-            height=4,
+            height=5,
             font=FONT,
             bg=SURFACE2,
             fg=TEXT,
@@ -126,8 +133,7 @@ class AddPasswordScreen(tk.Frame):
             relief="flat",
             wrap="word",
         )
-        self.notes_entry.grid(row=7, column=0, columnspan=2, sticky="nsew")
-        form.rowconfigure(7, weight=1)
+        self.notes_entry.grid(row=7, column=0, columnspan=2, sticky="ew")
 
         actions = tk.Frame(form, bg=SURFACE)
         actions.grid(row=8, column=0, columnspan=2, sticky="ew", pady=(18, 0))
@@ -176,6 +182,9 @@ class AddPasswordScreen(tk.Frame):
     def toggle_password(self):
         self.show_password = not self.show_password
         self.password_entry.configure(show="" if self.show_password else "*")
+        self.toggle_btn.configure(
+            text=f"{ICON_EYE_OFF} Hide" if self.show_password else f"{ICON_EYE} Show"
+        )
 
     def generate_password(self):
         alphabet = string.ascii_letters + string.digits + "!@#$%^&*()-_=+[]{};:,.?"
@@ -211,7 +220,10 @@ class AddPasswordScreen(tk.Frame):
         )
 
         if result["success"]:
-            messagebox.showinfo("Saved", "Credential saved securely.")
+            messagebox.showinfo(
+                "Saved",
+                "Credential saved securely.",
+            )
             self.controller.show_screen("dashboard")
         else:
             messagebox.showerror(

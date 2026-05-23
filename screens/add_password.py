@@ -7,8 +7,10 @@ from libs.db import save_password
 from libs.crypto import encrypt
 from libs.window_manager import (
     BG,
+    BORDER,
     CARD_PAD_X,
     CARD_PAD_Y,
+    DANGER,
     FONT,
     FONT_LG,
     FONT_TITLE,
@@ -19,6 +21,7 @@ from libs.window_manager import (
     ICON_PLUS,
     MUTED,
     PAD_X,
+    SUCCESS,
     SURFACE,
     SURFACE2,
     TEXT,
@@ -99,6 +102,7 @@ class AddPasswordScreen(tk.Frame):
 
         self.password_entry = make_entry(password_row, show="*")
         self.password_entry.grid(row=0, column=0, sticky="ew", ipady=8)
+        self.password_entry.bind("<KeyRelease>", self.update_strength)
 
         self.toggle_btn = make_button(
             password_row,
@@ -115,8 +119,10 @@ class AddPasswordScreen(tk.Frame):
             variant="primary",
         ).grid(row=0, column=2, padx=(8, 0), ipadx=16, ipady=7)
 
+        self.build_strength_meter(form, start_row=6)
+
         make_field_label(form, "Notes").grid(
-            row=6,
+            row=9,
             column=0,
             columnspan=2,
             sticky="ew",
@@ -133,10 +139,10 @@ class AddPasswordScreen(tk.Frame):
             relief="flat",
             wrap="word",
         )
-        self.notes_entry.grid(row=7, column=0, columnspan=2, sticky="ew")
+        self.notes_entry.grid(row=10, column=0, columnspan=2, sticky="ew")
 
         actions = tk.Frame(form, bg=SURFACE)
-        actions.grid(row=8, column=0, columnspan=2, sticky="ew", pady=(18, 0))
+        actions.grid(row=11, column=0, columnspan=2, sticky="ew", pady=(18, 0))
         actions.columnconfigure(0, weight=1)
 
         tk.Label(
@@ -179,6 +185,75 @@ class AddPasswordScreen(tk.Frame):
 
         return entry
 
+    def build_strength_meter(self, parent, start_row):
+        meter = tk.Frame(parent, bg=SURFACE)
+        meter.grid(
+            row=start_row,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            pady=(12, 0),
+        )
+        meter.columnconfigure(0, weight=1)
+        meter.columnconfigure(1, weight=1)
+        meter.columnconfigure(2, weight=1)
+        meter.columnconfigure(3, weight=1)
+
+        self.meter_segments = []
+
+        for index in range(4):
+            segment = tk.Frame(meter, bg=BORDER, height=6)
+            segment.grid(row=0, column=index, sticky="ew", padx=(0, 4))
+            self.meter_segments.append(segment)
+
+        self.strength_label = tk.Label(
+            parent,
+            text="Password strength: empty",
+            font=FONT,
+            fg=MUTED,
+            bg=SURFACE,
+            anchor="w",
+        )
+        self.strength_label.grid(
+            row=start_row + 1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            pady=(8, 0),
+        )
+
+    def password_score(self, value):
+        score = 0
+
+        if len(value) >= 8:
+            score += 1
+        if len(value) >= 12:
+            score += 1
+        if any(char.isdigit() for char in value):
+            score += 1
+        if any(not char.isalnum() for char in value):
+            score += 1
+
+        return score
+
+    def update_strength(self, _event=None):
+        password = self.password_entry.get()
+        score = self.password_score(password)
+
+        labels = ["empty", "weak", "fair", "good", "strong"]
+        colors = [BORDER, DANGER, "#D6A94F", GOLD, SUCCESS]
+
+        for index, segment in enumerate(self.meter_segments):
+            if index < score:
+                segment.configure(bg=colors[score])
+            else:
+                segment.configure(bg=BORDER)
+
+        self.strength_label.configure(
+            text=f"Password strength: {labels[score]}",
+            fg=colors[score],
+        )
+
     def toggle_password(self):
         self.show_password = not self.show_password
         self.password_entry.configure(show="" if self.show_password else "*")
@@ -192,6 +267,7 @@ class AddPasswordScreen(tk.Frame):
 
         self.password_entry.delete(0, tk.END)
         self.password_entry.insert(0, password)
+        self.update_strength()
 
     def save(self):
         site = self.site_entry.get().strip()

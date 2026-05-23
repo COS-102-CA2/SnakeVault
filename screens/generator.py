@@ -5,13 +5,17 @@ from tkinter import messagebox
 
 from libs.window_manager import (
     BG,
+    BORDER,
+    DANGER,
     FONT,
     FONT_LG,
     FONT_MONO,
     FONT_TITLE,
     GOLD,
     ICON_GENERATOR,
+    MUTED,
     PAD_X,
+    SUCCESS,
     SURFACE,
     SURFACE2,
     TEXT,
@@ -127,8 +131,10 @@ class GeneratorScreen(tk.Frame):
             relief="flat",
         ).grid(row=3, column=0, sticky="ew", ipady=10)
 
+        self.build_strength_meter(body, start_row=4)
+
         actions = tk.Frame(body, bg=SURFACE)
-        actions.grid(row=4, column=0, sticky="ew", pady=(20, 0))
+        actions.grid(row=6, column=0, sticky="ew", pady=(20, 0))
 
         make_button(
             actions,
@@ -144,6 +150,31 @@ class GeneratorScreen(tk.Frame):
             variant="secondary",
         ).pack(side="left", padx=10, ipadx=24, ipady=9)
 
+    def build_strength_meter(self, parent, start_row):
+        meter = tk.Frame(parent, bg=SURFACE)
+        meter.grid(row=start_row, column=0, sticky="ew", pady=(12, 0))
+        meter.columnconfigure(0, weight=1)
+        meter.columnconfigure(1, weight=1)
+        meter.columnconfigure(2, weight=1)
+        meter.columnconfigure(3, weight=1)
+
+        self.meter_segments = []
+
+        for index in range(4):
+            segment = tk.Frame(meter, bg=BORDER, height=6)
+            segment.grid(row=0, column=index, sticky="ew", padx=(0, 4))
+            self.meter_segments.append(segment)
+
+        self.strength_label = tk.Label(
+            parent,
+            text="Password strength: empty",
+            font=FONT,
+            fg=MUTED,
+            bg=SURFACE,
+            anchor="w",
+        )
+        self.strength_label.grid(row=start_row + 1, column=0, sticky="ew", pady=(8, 0))
+
     def add_check(self, parent, text, variable):
         tk.Checkbutton(
             parent,
@@ -156,6 +187,38 @@ class GeneratorScreen(tk.Frame):
             activebackground=SURFACE,
             activeforeground=TEXT,
         ).pack(side="left", padx=(0, 18))
+
+    def password_score(self, value):
+        score = 0
+
+        if len(value) >= 8:
+            score += 1
+        if len(value) >= 12:
+            score += 1
+        if any(char.isdigit() for char in value):
+            score += 1
+        if any(not char.isalnum() for char in value):
+            score += 1
+
+        return score
+
+    def update_strength(self):
+        password = self.generated_var.get()
+        score = self.password_score(password)
+
+        labels = ["empty", "weak", "fair", "good", "strong"]
+        colors = [BORDER, DANGER, "#D6A94F", GOLD, SUCCESS]
+
+        for index, segment in enumerate(self.meter_segments):
+            if index < score:
+                segment.configure(bg=colors[score])
+            else:
+                segment.configure(bg=BORDER)
+
+        self.strength_label.configure(
+            text=f"Password strength: {labels[score]}",
+            fg=colors[score],
+        )
 
     def generate(self):
         pools = []
@@ -186,6 +249,7 @@ class GeneratorScreen(tk.Frame):
         )
 
         self.generated_var.set(password)
+        self.update_strength()
 
     def copy(self):
         password = self.generated_var.get()

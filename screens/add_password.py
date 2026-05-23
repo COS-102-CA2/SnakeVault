@@ -1,118 +1,148 @@
+import secrets
+import string
 import tkinter as tk
 from tkinter import messagebox
 
-from libs.db import save_password
+from db import save_password
 from libs.crypto import encrypt
-from libs.window_manager import BG, BORDER, GOLD, MUTED, SURFACE, SURFACE2, TEXT, FONT, FONT_LG, FONT_TITLE
+from libs.window_manager import (
+    BG,
+    BORDER,
+    CARD_PAD_X,
+    CARD_PAD_Y,
+    FONT,
+    FONT_LG,
+    FONT_TITLE,
+    GOLD,
+    ICON_GENERATOR,
+    ICON_PLUS,
+    MUTED,
+    PAD_X,
+    SURFACE,
+    SURFACE2,
+    TEXT,
+    make_button,
+    make_card,
+    make_entry,
+    make_field_label,
+)
 
 
 class AddPasswordScreen(tk.Frame):
-    def __init__(self, parent, controller):
-        super().__init__(parent, bg=BG)
+    def _init_(self, parent, controller):
+        super()._init_(parent, bg=BG)
         self.controller = controller
         self.show_password = False
 
-        top = tk.Frame(self, bg=BG)
-        top.pack(fill="x", padx=54, pady=(36, 18))
+        if not self.controller.master_key:
+            self.after(0, lambda: self.controller.show_screen("login"))
+            return
+
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+
+        self.build_header()
+        self.build_form()
+
+    def build_header(self):
+        header = tk.Frame(self, bg=BG)
+        header.grid(row=0, column=0, sticky="ew", padx=PAD_X, pady=(28, 14))
+        header.columnconfigure(0, weight=1)
 
         tk.Label(
-            top,
-            text="Add Password",
+            header,
+            text=f"{ICON_PLUS} Add Password",
             font=FONT_TITLE,
             fg=GOLD,
             bg=BG,
-        ).pack(side="left")
+        ).grid(row=0, column=0, sticky="w")
 
-        tk.Button(
-            top,
-            text="Back",
-            font=FONT,
-            bg=SURFACE2,
-            fg=TEXT,
-            bd=0,
-            command=lambda: controller.show_screen("dashboard"),
-        ).pack(side="right", ipadx=18, ipady=7)
+        make_button(
+            header,
+            "Back",
+            lambda: self.controller.show_screen("dashboard"),
+            variant="secondary",
+        ).grid(row=0, column=1, sticky="e", ipadx=18, ipady=7)
 
-        card = tk.Frame(
-            self,
-            bg=SURFACE,
-            highlightbackground=BORDER,
-            highlightthickness=1,
-        )
-        card.pack(fill="both", expand=True, padx=54, pady=(0, 30))
+    def build_form(self):
+        card = make_card(self)
+        card.grid(row=1, column=0, sticky="nsew", padx=PAD_X, pady=(0, 24))
+        card.columnconfigure(0, weight=1)
+        card.rowconfigure(0, weight=1)
 
         form = tk.Frame(card, bg=SURFACE)
-        form.pack(fill="both", expand=True, padx=24, pady=22)
+        form.grid(row=0, column=0, sticky="nsew", padx=CARD_PAD_X, pady=CARD_PAD_Y)
+        form.columnconfigure(0, weight=1)
+        form.columnconfigure(1, weight=1)
 
-        self.site_entry = self.add_field(form, "Site name")
-        self.url_entry = self.add_field(form, "URL")
-        self.username_entry = self.add_field(form, "Username or email")
+        self.site_entry = self.add_field(form, "Site name", 0, 0)
+        self.url_entry = self.add_field(form, "URL", 0, 1)
+        self.username_entry = self.add_field(form, "Username or email", 1, 0)
+        self.category_entry = self.add_field(form, "Category", 1, 1, default="General")
 
-        tk.Label(
-            form,
-            text="Password",
-            font=FONT,
-            fg=MUTED,
-            bg=SURFACE,
-            anchor="w",
-        ).pack(fill="x")
+        make_field_label(form, "Password").grid(row=2, column=0, columnspan=2, sticky="ew", pady=(8, 6))
 
         password_row = tk.Frame(form, bg=SURFACE)
-        password_row.pack(fill="x", pady=(6, 12))
+        password_row.grid(row=3, column=0, columnspan=2, sticky="ew")
+        password_row.columnconfigure(0, weight=1)
 
-        self.password_entry = tk.Entry(
+        self.password_entry = make_entry(password_row, show="*")
+        self.password_entry.grid(row=0, column=0, sticky="ew", ipady=8)
+
+        make_button(
             password_row,
+            "Show",
+            self.toggle_password,
+            variant="secondary",
+        ).grid(row=0, column=1, padx=(8, 0), ipadx=12, ipady=7)
+
+        make_button(
+            password_row,
+            f"{ICON_GENERATOR} Generate",
+            self.generate_password,
+            variant="primary",
+        ).grid(row=0, column=2, padx=(8, 0), ipadx=16, ipady=7)
+
+        make_field_label(form, "Notes").grid(row=4, column=0, columnspan=2, sticky="ew", pady=(14, 6))
+
+        self.notes_entry = tk.Text(
+            form,
+            height=4,
             font=FONT,
             bg=SURFACE2,
             fg=TEXT,
             insertbackground=TEXT,
             relief="flat",
-            show="*",
+            wrap="word",
         )
-        self.password_entry.pack(side="left", fill="x", expand=True, ipady=8)
+        self.notes_entry.grid(row=5, column=0, columnspan=2, sticky="nsew")
+        form.rowconfigure(5, weight=1)
 
-        tk.Button(
-            password_row,
-            text="Show",
-            font=FONT,
-            bg=SURFACE2,
-            fg=TEXT,
-            bd=0,
-            command=self.toggle_password,
-        ).pack(side="left", padx=(8, 0), ipadx=12, ipady=7)
+        actions = tk.Frame(form, bg=SURFACE)
+        actions.grid(row=6, column=0, columnspan=2, sticky="ew", pady=(18, 0))
+        actions.columnconfigure(0, weight=1)
 
-        self.category_entry = self.add_field(form, "Category", default="General")
-        self.notes_entry = self.add_field(form, "Notes")
-
-        tk.Button(
-            form,
-            text="Save to vault",
-            font=FONT_LG,
-            bg=GOLD,
-            fg="#161622",
-            bd=0,
-            command=self.save,
-        ).pack(anchor="e", pady=(10, 0), ipadx=30, ipady=9)
-
-    def add_field(self, parent, label, default=""):
         tk.Label(
-            parent,
-            text=label,
+            actions,
+            text="Site, username, and password are required.",
             font=FONT,
             fg=MUTED,
             bg=SURFACE,
-            anchor="w",
-        ).pack(fill="x")
+        ).grid(row=0, column=0, sticky="w")
 
-        entry = tk.Entry(
-            parent,
-            font=FONT,
-            bg=SURFACE2,
-            fg=TEXT,
-            insertbackground=TEXT,
-            relief="flat",
-        )
-        entry.pack(fill="x", pady=(6, 12), ipady=8)
+        make_button(
+            actions,
+            "Save to vault",
+            self.save,
+            variant="primary",
+            font=FONT_LG,
+        ).grid(row=0, column=1, sticky="e", ipadx=28, ipady=9)
+
+    def add_field(self, parent, label, row, column, default=""):
+        make_field_label(parent, label).grid(row=row * 2, column=column, sticky="ew", pady=(0, 6), padx=(0, 10))
+
+        entry = make_entry(parent)
+        entry.grid(row=row * 2 + 1, column=column, sticky="ew", ipady=8, padx=(0, 10), pady=(0, 10))
 
         if default:
             entry.insert(0, default)
@@ -121,9 +151,14 @@ class AddPasswordScreen(tk.Frame):
 
     def toggle_password(self):
         self.show_password = not self.show_password
-        self.password_entry.configure(
-            show="" if self.show_password else "*"
-        )
+        self.password_entry.configure(show="" if self.show_password else "*")
+
+    def generate_password(self):
+        alphabet = string.ascii_letters + string.digits + "!@#$%^&*()-_=+[]{};:,.?"
+        password = "".join(secrets.choice(alphabet) for _ in range(16))
+
+        self.password_entry.delete(0, tk.END)
+        self.password_entry.insert(0, password)
 
     def save(self):
         site = self.site_entry.get().strip()
@@ -131,7 +166,7 @@ class AddPasswordScreen(tk.Frame):
         username = self.username_entry.get().strip()
         password = self.password_entry.get().strip()
         category = self.category_entry.get().strip() or "General"
-        notes = self.notes_entry.get().strip()
+        notes = self.notes_entry.get("1.0", tk.END).strip()
 
         if not site or not username or not password:
             messagebox.showwarning(
@@ -141,7 +176,7 @@ class AddPasswordScreen(tk.Frame):
             return
 
         encrypted_password = encrypt(password, self.controller.master_key)
-        
+
         result = save_password(
             site,
             url,

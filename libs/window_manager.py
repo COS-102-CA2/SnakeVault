@@ -152,4 +152,4 @@ def center_window(root, width=800, height=550):
 
 def make_responsive_root(root):
     root.minsize(800, 550)
-    root.resizable(True, True)g
+    root.resizable(True, True)

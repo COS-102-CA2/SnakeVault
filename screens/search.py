@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 
-from db import fetch_user_passwords
+from libs.db import fetch_user_passwords
 from libs.window_manager import (
     BG,
     BORDER,

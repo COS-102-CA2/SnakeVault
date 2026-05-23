@@ -13,12 +13,15 @@ from libs.window_manager import (
     GOLD,
     ICON_COPY,
     ICON_DELETE,
+    ICON_EYE,
+    ICON_EYE_OFF,
     ICON_KEY,
     MUTED,
     PAD_X,
     SURFACE,
     SURFACE2,
     TEXT,
+    ScrollableFrame,
     make_button,
     make_card,
 )
@@ -28,18 +31,23 @@ class PasswordDetailScreen(tk.Frame):
     def __init__(self, parent, controller, entry):
         super().__init__(parent, bg=BG)
         self.controller = controller
-        
+
         if not self.controller.master_key:
             self.after(0, lambda: self.controller.show_screen("login"))
             return
 
         self.entry_data = entry
         self.verified_key = None
+        self.revealed_password = None
         self.hide_job = None
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
 
+        self.build_header()
+        self.build_detail()
+
+    def build_header(self):
         top = tk.Frame(self, bg=BG)
         top.grid(row=0, column=0, sticky="ew", padx=PAD_X, pady=(42, 18))
         top.columnconfigure(0, weight=1)
@@ -55,41 +63,66 @@ class PasswordDetailScreen(tk.Frame):
         make_button(
             top,
             "Back",
-            lambda: controller.show_screen("dashboard"),
+            lambda: self.controller.show_screen("dashboard"),
             variant="secondary",
         ).grid(row=0, column=1, sticky="e", ipadx=18, ipady=7)
 
-        card = make_card(self)
-        card.grid(row=1, column=0, sticky="nsew", padx=PAD_X, pady=(0, 42))
+    def build_detail(self):
+        scroll = ScrollableFrame(self, bg=BG)
+        scroll.grid(row=1, column=0, sticky="nsew", padx=PAD_X, pady=(0, 42))
+        scroll.content.columnconfigure(0, weight=1)
+
+        card = make_card(scroll.content)
+        card.grid(row=0, column=0, sticky="ew")
         card.columnconfigure(0, weight=1)
 
         body = tk.Frame(card, bg=SURFACE)
-        body.grid(row=0, column=0, sticky="nsew", padx=24, pady=24)
+        body.grid(row=0, column=0, sticky="ew", padx=24, pady=24)
         body.columnconfigure(0, weight=1)
 
-        self.add_display(body, "Site", entry.get("site_name", ""), can_copy=True)
-        self.add_display(body, "URL", entry.get("url", ""), can_copy=True)
-        self.add_display(body, "Username", entry.get("username", ""), can_copy=True)
-        self.password_value = self.add_display(body, "Password", "Hidden until verified", can_copy=True)
-        self.add_display(body, "Category", entry.get("category", "General"))
-        self.add_display(body, "Notes", entry.get("notes", ""))
+        self.add_display(body, "Site", self.entry_data.get("site_name", ""), can_copy=True)
+        self.add_display(body, "URL", self.entry_data.get("url", ""), can_copy=True)
+        self.add_display(body, "Username", self.entry_data.get("username", ""), can_copy=True)
+
+        self.password_value = self.add_display(
+            body,
+            "Password",
+            "Hidden until verified",
+            can_copy=False,
+            password_row=True,
+        )
+
+        self.add_display(body, "Category", self.entry_data.get("category", "General"))
+        self.add_display(body, "Notes", self.entry_data.get("notes", ""))
 
         actions = tk.Frame(body, bg=SURFACE)
-        actions.grid(row=12, column=0, sticky="ew", pady=(18, 0))
+        actions.grid(row=20, column=0, sticky="ew", pady=(18, 0))
         actions.columnconfigure(0, weight=1)
 
-        make_button(actions, "Reveal password", self.verify_before_reveal, font=FONT_LG).grid(row=0, column=0, sticky="w", ipadx=24, ipady=9)
-        make_button(actions, f"{ICON_DELETE} Delete", self.delete_entry, variant="danger").grid(row=0, column=1, sticky="e", ipadx=22, ipady=9)
+        make_button(
+            actions,
+            f"{ICON_DELETE} Delete",
+            self.delete_entry,
+            variant="danger",
+        ).grid(row=0, column=1, sticky="e", ipadx=22, ipady=9)
 
-    def add_display(self, parent, label, value, can_copy=False):
-        row_index = len(parent.grid_slaves())
+    def next_row(self, parent):
+        rows = [info["row"] for child in parent.grid_slaves() for info in [child.grid_info()]]
+        if not rows:
+            return 0
+        return max(int(row) for row in rows) + 1
 
-        tk.Label(parent, text=label, font=FONT, fg=MUTED, bg=SURFACE, anchor="w").grid(
-            row=row_index,
-            column=0,
-            sticky="ew",
-            pady=(0, 5),
-        )
+    def add_display(self, parent, label, value, can_copy=False, password_row=False):
+        row_index = self.next_row(parent)
+
+        tk.Label(
+            parent,
+            text=label,
+            font=FONT,
+            fg=MUTED,
+            bg=SURFACE,
+            anchor="w",
+        ).grid(row=row_index, column=0, sticky="ew", pady=(0, 5))
 
         row = tk.Frame(parent, bg=SURFACE)
         row.grid(row=row_index + 1, column=0, sticky="ew", pady=(0, 12))
@@ -107,7 +140,23 @@ class PasswordDetailScreen(tk.Frame):
         )
         value_label.grid(row=0, column=0, sticky="ew")
 
-        if can_copy:
+        if password_row:
+            self.reveal_btn = make_button(
+                row,
+                f"{ICON_EYE} Reveal",
+                self.toggle_reveal_password,
+                variant="secondary",
+            )
+            self.reveal_btn.grid(row=0, column=1, padx=(8, 0), ipadx=12, ipady=8)
+
+            make_button(
+                row,
+                f"{ICON_COPY} Copy",
+                self.copy_password,
+                variant="secondary",
+            ).grid(row=0, column=2, padx=(8, 0), ipadx=12, ipady=8)
+
+        elif can_copy:
             make_button(
                 row,
                 f"{ICON_COPY} Copy",
@@ -117,7 +166,7 @@ class PasswordDetailScreen(tk.Frame):
 
         return value_label
 
-    def verify_before_reveal(self):
+    def verify_and_decrypt(self):
         entered_key = simpledialog.askstring(
             "Verify master key",
             "Enter your master key:",
@@ -126,26 +175,46 @@ class PasswordDetailScreen(tk.Frame):
         )
 
         if not entered_key:
-            return
+            return None
 
         result = get_master_key()
 
         if not result["success"] or not result["data"]:
-            messagebox.showerror("Verification failed", result.get("error", "Could not verify master key."))
-            return
+            messagebox.showerror(
+                "Verification failed",
+                result.get("error", "Could not verify master key."),
+            )
+            return None
 
         if not verify_key(entered_key, result["data"]):
             messagebox.showerror("Wrong key", "Incorrect master key.")
-            return
+            return None
 
         try:
-            decrypted_password = decrypt(self.entry_data.get("encrypted_password", ""), entered_key)
+            return decrypt(
+                self.entry_data.get("encrypted_password", ""),
+                entered_key,
+            )
         except Exception:
-            messagebox.showerror("Decrypt failed", "Could not decrypt this password with the supplied key.")
+            messagebox.showerror(
+                "Decrypt failed",
+                "Could not decrypt this password with the supplied key.",
+            )
+            return None
+
+    def toggle_reveal_password(self):
+        if self.revealed_password:
+            self.hide_password()
             return
 
-        self.verified_key = entered_key
+        decrypted_password = self.verify_and_decrypt()
+
+        if not decrypted_password:
+            return
+
+        self.revealed_password = decrypted_password
         self.password_value.configure(text=decrypted_password)
+        self.reveal_btn.configure(text=f"{ICON_EYE_OFF} Hide")
 
         if self.hide_job:
             self.after_cancel(self.hide_job)
@@ -153,9 +222,27 @@ class PasswordDetailScreen(tk.Frame):
         self.hide_job = self.after(30000, self.hide_password)
 
     def hide_password(self):
+        self.revealed_password = None
         self.password_value.configure(text="Hidden until verified")
-        self.verified_key = None
+        self.reveal_btn.configure(text=f"{ICON_EYE} Reveal")
+
+        if self.hide_job:
+            self.after_cancel(self.hide_job)
+
         self.hide_job = None
+
+    def copy_password(self):
+        password = self.revealed_password
+
+        if not password:
+            password = self.verify_and_decrypt()
+
+        if not password:
+            return
+
+        self.clipboard_clear()
+        self.clipboard_append(password)
+        messagebox.showinfo("Copied", "Password copied to clipboard.")
 
     def copy_value(self, value):
         if not value or value == "-" or value == "Hidden until verified":
@@ -166,7 +253,10 @@ class PasswordDetailScreen(tk.Frame):
         messagebox.showinfo("Copied", "Value copied to clipboard.")
 
     def delete_entry(self):
-        confirm = messagebox.askyesno("Delete password", "Delete this saved credential?")
+        confirm = messagebox.askyesno(
+            "Delete password",
+            "Delete this saved credential?",
+        )
 
         if not confirm:
             return
@@ -176,4 +266,7 @@ class PasswordDetailScreen(tk.Frame):
         if result["success"]:
             self.controller.show_screen("dashboard")
         else:
-            messagebox.showerror("Delete failed", result.get("error", "Could not delete credential."))
+            messagebox.showerror(
+                "Delete failed",
+                result.get("error", "Could not delete credential."),
+            )

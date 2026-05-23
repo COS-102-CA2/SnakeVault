@@ -1,48 +1,30 @@
 import tkinter as tk
 
-from libs.window_manager import BG, GOLD, MUTED, SURFACE2, TEXT, FONT, FONT_LG, FONT_TITLE
+from libs.window_manager import BG, FONT, FONT_DISPLAY, FONT_LG, GOLD, ICON_KEY, ICON_LOCK, ICON_SNAKE, MUTED, SURFACE2, TEXT, make_button
 
 
 class WelcomeScreen(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, bg=BG)
         self.controller = controller
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
 
-        tk.Label(
-            self,
-            text="SnakeVault",
-            font=FONT_TITLE,
-            fg=GOLD,
-            bg=BG,
-        ).pack(pady=(120, 8))
+        content = tk.Frame(self, bg=BG)
+        content.grid(row=0, column=0)
 
-        tk.Label(
-            self,
-            text="Your secure password manager",
-            font=FONT,
-            fg=MUTED,
-            bg=BG,
-        ).pack(pady=(0, 50))
+        tk.Label(content, text=f"{ICON_SNAKE}  {ICON_LOCK}", font=("Segoe UI Emoji", 42), fg=GOLD, bg=BG).pack(pady=(0, 24))
+        tk.Label(content, text="SnakeVault", font=FONT_DISPLAY, fg=GOLD, bg=BG).pack()
+        tk.Label(content, text="Your secure password manager", font=FONT, fg=MUTED, bg=BG).pack(pady=(8, 54))
 
-        tk.Button(
-            self,
-            text="Continue to login",
-            font=FONT_LG,
-            bg=GOLD,
-            fg="#161622",
-            activebackground="#D8BA5C",
-            bd=0,
-            command=lambda: controller.show_screen("login"),
-        ).pack(ipadx=36, ipady=10)
+        actions = tk.Frame(content, bg=BG)
+        actions.pack()
 
-        tk.Button(
-            self,
-            text="Exit",
-            font=FONT,
-            bg=SURFACE2,
-            fg=TEXT,
-            activebackground=SURFACE2,
-            activeforeground=TEXT,
-            bd=0,
-            command=controller.destroy,
-        ).pack(pady=14, ipadx=28, ipady=8)
+        make_button(actions, f"{ICON_KEY} Create new vault", lambda: controller.show_screen("login"), font=FONT_LG).pack(
+            side="left", padx=10, ipadx=22, ipady=10
+        )
+        make_button(actions, f"{ICON_LOCK} Unlock existing vault", lambda: controller.show_screen("login"), variant="secondary", font=FONT_LG).pack(
+            side="left", padx=10, ipadx=22, ipady=10
+        )
+
+        tk.Label(content, text="AES encrypted · Zero knowledge · On-device master key", font=FONT, fg=MUTED, bg=BG).pack(pady=(36, 0))

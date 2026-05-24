@@ -173,11 +173,9 @@ class SearchScreen(ctk.CTkFrame):
                 text_color=TEXT,
                 fg_color=SURFACE2,
                 corner_radius=5,
-                padx=10,
-                pady=4,
             )
-            category_label.grid(row=0, column=2, rowspan=2, sticky="e")
-
+            category_label.grid(row=0, column=2, rowspan=2, sticky="e", padx=10, pady=4)
+            
             for widget in (icon, site_label, user_label, category_label):
                 widget.bind("<Button-1>", lambda _event, entry=item: self.open_detail(entry))
 

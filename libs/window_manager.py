@@ -182,15 +182,17 @@ def clear_frame(frame):
 
 class ScrollableFrame(ctk.CTkFrame):
     def __init__(self, parent, fg_color=BG, bg=None):
+        color = fg_color if bg is None else bg
+
         super().__init__(
             parent,
-            fg_color=fg_color if bg is None else bg,
+            fg_color=color,
             corner_radius=0,
         )
 
         self.content = ctk.CTkScrollableFrame(
             self,
-            fg_color=fg_color if bg is None else bg,
+            fg_color=color,
             corner_radius=0,
             scrollbar_button_color=SURFACE2,
             scrollbar_button_hover_color="#3A3A54",

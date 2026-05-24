@@ -137,10 +137,8 @@ class PasswordDetailScreen(ctk.CTkFrame):
             fg_color=SURFACE2,
             corner_radius=6,
             anchor="w",
-            padx=12,
-            pady=8,
         )
-        value_label.grid(row=0, column=0, sticky="ew")
+        value_label.grid(row=0, column=0, sticky="ew", padx=0, pady=4)
 
         if password_row:
             self.reveal_btn = make_button(

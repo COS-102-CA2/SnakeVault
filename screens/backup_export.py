@@ -4,8 +4,8 @@ from datetime import datetime
 import customtkinter as ctk
 from tkinter import filedialog, messagebox, simpledialog
 
-from db import fetch_user_passwords
-from libs.crypto import decrypt
+from libs.db import fetch_user_passwords, get_master_key
+from libs.crypto import decrypt, verify_key
 from libs.window_manager import (
     BG,
     BORDER,
@@ -234,6 +234,22 @@ class BackupExportScreen(ctk.CTkFrame):
         )
 
         if not entered_key:
+            return
+        
+                key_result = get_master_key()
+
+        if not key_result["success"] or not key_result["data"]:
+            messagebox.showerror(
+                "Verification failed",
+                key_result.get("error", "Could not verify master key."),
+            )
+            return
+
+        if not verify_key(entered_key, key_result["data"]):
+            messagebox.showerror(
+                "Wrong key",
+                "Incorrect master key. CSV export cancelled.",
+            )
             return
 
         entries = self.fetch_entries()

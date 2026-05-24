@@ -1,4 +1,4 @@
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import messagebox
 
 from libs.db import fetch_user_passwords, get_master_key, logout_user, save_master_key, update_password
@@ -25,32 +25,31 @@ from libs.window_manager import (
 )
 
 
-class SettingsScreen(tk.Frame):
+class SettingsScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
-        super().__init__(parent, bg=BG)
+        super().__init__(parent, fg_color=BG, corner_radius=0)
         self.controller = controller
 
         if not self.controller.master_key:
             self.after(0, lambda: self.controller.show_screen("login"))
             return
 
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
 
         self.build_header()
         self.build_settings()
 
     def build_header(self):
-        top = tk.Frame(self, bg=BG)
+        top = ctk.CTkFrame(self, fg_color=BG, corner_radius=0)
         top.grid(row=0, column=0, sticky="ew", padx=PAD_X, pady=(42, 18))
-        top.columnconfigure(0, weight=1)
+        top.grid_columnconfigure(0, weight=1)
 
-        tk.Label(
+        ctk.CTkLabel(
             top,
             text=f"{ICON_SETTINGS} Settings",
             font=FONT_TITLE,
-            fg=GOLD,
-            bg=BG,
+            text_color=GOLD,
         ).grid(row=0, column=0, sticky="w")
 
         make_button(
@@ -61,32 +60,30 @@ class SettingsScreen(tk.Frame):
         ).grid(row=0, column=1, sticky="e", ipadx=18, ipady=7)
 
     def build_settings(self):
-        scroll = ScrollableFrame(self, bg=BG)
+        scroll = ScrollableFrame(self, fg_color=BG)
         scroll.grid(row=1, column=0, sticky="nsew", padx=PAD_X, pady=(0, 42))
-        scroll.content.columnconfigure(0, weight=1)
+        scroll.content.grid_columnconfigure(0, weight=1)
 
         card = make_card(scroll.content)
         card.grid(row=0, column=0, sticky="ew")
-        card.columnconfigure(0, weight=1)
+        card.grid_columnconfigure(0, weight=1)
 
-        body = tk.Frame(card, bg=SURFACE)
+        body = ctk.CTkFrame(card, fg_color=SURFACE, corner_radius=0)
         body.grid(row=0, column=0, sticky="ew", padx=24, pady=24)
-        body.columnconfigure(0, weight=1)
+        body.grid_columnconfigure(0, weight=1)
 
-        tk.Label(
+        ctk.CTkLabel(
             body,
             text="Change master key",
             font=FONT_LG,
-            fg=TEXT,
-            bg=SURFACE,
+            text_color=TEXT,
         ).grid(row=0, column=0, sticky="w")
 
-        tk.Label(
+        ctk.CTkLabel(
             body,
             text="Changing the key will re-encrypt your saved passwords before updating Supabase.",
             font=FONT,
-            fg=MUTED,
-            bg=SURFACE,
+            text_color=MUTED,
         ).grid(row=1, column=0, sticky="w", pady=(2, 16))
 
         self.current_entry = self.add_field(body, "Current master key", 2)
@@ -98,20 +95,20 @@ class SettingsScreen(tk.Frame):
             "Update master key",
             self.change_master_key,
             font=FONT_LG,
-        ).grid(row=8, column=0, sticky="e", pady=(8, 24), ipadx=26, ipady=9)
+        ).grid(row=8, column=0, sticky="e", pady=(8, 24), ipadx=22, ipady=6)
 
-        tk.Frame(
+        ctk.CTkFrame(
             body,
-            bg=BORDER,
+            fg_color=BORDER,
             height=1,
+            corner_radius=0,
         ).grid(row=9, column=0, sticky="ew", pady=(4, 18))
 
-        tk.Label(
+        ctk.CTkLabel(
             body,
             text="Session",
             font=FONT_LG,
-            fg=TEXT,
-            bg=SURFACE,
+            text_color=TEXT,
         ).grid(row=10, column=0, sticky="w")
 
         make_button(
@@ -119,7 +116,7 @@ class SettingsScreen(tk.Frame):
             f"{ICON_LOCK} Logout and lock vault",
             self.logout,
             variant="danger",
-        ).grid(row=11, column=0, sticky="w", pady=(12, 0), ipadx=24, ipady=9)
+        ).grid(row=11, column=0, sticky="w", pady=(12, 0), ipadx=20, ipady=6)
 
     def add_field(self, parent, label, row):
         make_field_label(parent, label).grid(
@@ -134,7 +131,7 @@ class SettingsScreen(tk.Frame):
             row=row + 1,
             column=0,
             sticky="ew",
-            ipady=8,
+            ipady=5,
             pady=(0, 12),
         )
 
@@ -146,24 +143,15 @@ class SettingsScreen(tk.Frame):
         confirm = self.confirm_entry.get()
 
         if not current or not new_key or not confirm:
-            messagebox.showwarning(
-                "Missing details",
-                "Fill in all master key fields.",
-            )
+            messagebox.showwarning("Missing details", "Fill in all master key fields.")
             return
 
         if len(new_key) < 8:
-            messagebox.showwarning(
-                "Weak key",
-                "Use at least 8 characters for the new master key.",
-            )
+            messagebox.showwarning("Weak key", "Use at least 8 characters for the new master key.")
             return
 
         if new_key != confirm:
-            messagebox.showwarning(
-                "Keys do not match",
-                "Confirm the new master key exactly.",
-            )
+            messagebox.showwarning("Keys do not match", "Confirm the new master key exactly.")
             return
 
         stored = get_master_key()
@@ -176,11 +164,8 @@ class SettingsScreen(tk.Frame):
             return
 
         if not verify_key(current, stored["data"]):
-            messagebox.showerror(
-                "Wrong key",
-                "The current master key is incorrect.",
-            )
-            self.current_entry.delete(0, tk.END)
+            messagebox.showerror("Wrong key", "The current master key is incorrect.")
+            self.current_entry.delete(0, "end")
             return
 
         entries = fetch_user_passwords()
@@ -194,10 +179,7 @@ class SettingsScreen(tk.Frame):
 
         for item in entries["data"]:
             try:
-                plain_password = decrypt(
-                    item.get("encrypted_password", ""),
-                    current,
-                )
+                plain_password = decrypt(item.get("encrypted_password", ""), current)
                 encrypted_password = encrypt(plain_password, new_key)
             except Exception:
                 messagebox.showerror(
@@ -234,14 +216,11 @@ class SettingsScreen(tk.Frame):
 
         self.controller.master_key = new_key
 
-        self.current_entry.delete(0, tk.END)
-        self.new_entry.delete(0, tk.END)
-        self.confirm_entry.delete(0, tk.END)
+        self.current_entry.delete(0, "end")
+        self.new_entry.delete(0, "end")
+        self.confirm_entry.delete(0, "end")
 
-        messagebox.showinfo(
-            "Master key updated",
-            "Your master key has been changed.",
-        )
+        messagebox.showinfo("Master key updated", "Your master key has been changed.")
 
     def logout(self):
         logout_user()

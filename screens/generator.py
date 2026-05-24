@@ -1,6 +1,6 @@
 import secrets
 import string
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import messagebox
 
 from libs.window_manager import (
@@ -25,39 +25,38 @@ from libs.window_manager import (
 )
 
 
-class GeneratorScreen(tk.Frame):
+class GeneratorScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
-        super().__init__(parent, bg=BG)
+        super().__init__(parent, fg_color=BG, corner_radius=0)
         self.controller = controller
 
         if not self.controller.master_key:
             self.after(0, lambda: self.controller.show_screen("login"))
             return
 
-        self.length_var = tk.IntVar(value=16)
-        self.upper_var = tk.BooleanVar(value=True)
-        self.lower_var = tk.BooleanVar(value=True)
-        self.number_var = tk.BooleanVar(value=True)
-        self.symbol_var = tk.BooleanVar(value=True)
-        self.generated_var = tk.StringVar(value="")
+        self.length_var = ctk.IntVar(value=16)
+        self.upper_var = ctk.BooleanVar(value=True)
+        self.lower_var = ctk.BooleanVar(value=True)
+        self.number_var = ctk.BooleanVar(value=True)
+        self.symbol_var = ctk.BooleanVar(value=True)
+        self.generated_var = ctk.StringVar(value="")
 
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
 
         self.build_header()
         self.build_generator()
 
     def build_header(self):
-        top = tk.Frame(self, bg=BG)
+        top = ctk.CTkFrame(self, fg_color=BG, corner_radius=0)
         top.grid(row=0, column=0, sticky="ew", padx=PAD_X, pady=(42, 18))
-        top.columnconfigure(0, weight=1)
+        top.grid_columnconfigure(0, weight=1)
 
-        tk.Label(
+        ctk.CTkLabel(
             top,
             text=f"{ICON_GENERATOR} Password Generator",
             font=FONT_TITLE,
-            fg=GOLD,
-            bg=BG,
+            text_color=GOLD,
         ).grid(row=0, column=0, sticky="w")
 
         make_button(
@@ -68,52 +67,49 @@ class GeneratorScreen(tk.Frame):
         ).grid(row=0, column=1, sticky="e", ipadx=18, ipady=7)
 
     def build_generator(self):
-        scroll = ScrollableFrame(self, bg=BG)
+        scroll = ScrollableFrame(self, fg_color=BG)
         scroll.grid(row=1, column=0, sticky="nsew", padx=PAD_X, pady=(0, 42))
-        scroll.content.columnconfigure(0, weight=1)
+        scroll.content.grid_columnconfigure(0, weight=1)
 
         card = make_card(scroll.content)
         card.grid(row=0, column=0, sticky="ew")
-        card.columnconfigure(0, weight=1)
+        card.grid_columnconfigure(0, weight=1)
 
-        body = tk.Frame(card, bg=SURFACE)
+        body = ctk.CTkFrame(card, fg_color=SURFACE, corner_radius=0)
         body.grid(row=0, column=0, sticky="ew", padx=24, pady=24)
-        body.columnconfigure(0, weight=1)
+        body.grid_columnconfigure(0, weight=1)
 
-        tk.Label(
+        ctk.CTkLabel(
             body,
             text="Length",
             font=FONT_LG,
-            fg=TEXT,
-            bg=SURFACE,
+            text_color=TEXT,
         ).grid(row=0, column=0, sticky="w")
 
-        length_row = tk.Frame(body, bg=SURFACE)
+        length_row = ctk.CTkFrame(body, fg_color=SURFACE, corner_radius=0)
         length_row.grid(row=1, column=0, sticky="ew", pady=(8, 18))
-        length_row.columnconfigure(0, weight=1)
+        length_row.grid_columnconfigure(0, weight=1)
 
-        tk.Scale(
+        ctk.CTkSlider(
             length_row,
             from_=8,
             to=32,
-            orient="horizontal",
             variable=self.length_var,
-            bg=SURFACE,
-            fg=TEXT,
-            troughcolor=SURFACE2,
-            highlightthickness=0,
+            button_color=GOLD,
+            button_hover_color="#D8BA5C",
+            progress_color=GOLD,
+            fg_color=SURFACE2,
         ).grid(row=0, column=0, sticky="ew")
 
-        tk.Label(
+        ctk.CTkLabel(
             length_row,
             textvariable=self.length_var,
-            width=4,
+            width=42,
             font=FONT_LG,
-            fg=GOLD,
-            bg=SURFACE,
+            text_color=GOLD,
         ).grid(row=0, column=1)
 
-        options = tk.Frame(body, bg=SURFACE)
+        options = ctk.CTkFrame(body, fg_color=SURFACE, corner_radius=0)
         options.grid(row=2, column=0, sticky="ew", pady=(0, 20))
 
         self.add_check(options, "Uppercase", self.upper_var)
@@ -121,72 +117,59 @@ class GeneratorScreen(tk.Frame):
         self.add_check(options, "Numbers", self.number_var)
         self.add_check(options, "Symbols", self.symbol_var)
 
-        tk.Entry(
+        ctk.CTkEntry(
             body,
             textvariable=self.generated_var,
             font=FONT_MONO,
-            bg=SURFACE2,
-            fg=TEXT,
-            insertbackground=TEXT,
-            relief="flat",
-        ).grid(row=3, column=0, sticky="ew", ipady=10)
+            fg_color=SURFACE2,
+            text_color=TEXT,
+            border_color=SURFACE2,
+            corner_radius=6,
+        ).grid(row=3, column=0, sticky="ew", ipady=5)
 
         self.build_strength_meter(body, start_row=4)
 
-        actions = tk.Frame(body, bg=SURFACE)
+        actions = ctk.CTkFrame(body, fg_color=SURFACE, corner_radius=0)
         actions.grid(row=6, column=0, sticky="ew", pady=(20, 0))
 
-        make_button(
-            actions,
-            "Generate",
-            self.generate,
-            font=FONT_LG,
-        ).pack(side="left", ipadx=28, ipady=9)
-
-        make_button(
-            actions,
-            "Copy",
-            self.copy,
-            variant="secondary",
-        ).pack(side="left", padx=10, ipadx=24, ipady=9)
-
-    def build_strength_meter(self, parent, start_row):
-        meter = tk.Frame(parent, bg=SURFACE)
-        meter.grid(row=start_row, column=0, sticky="ew", pady=(12, 0))
-        meter.columnconfigure(0, weight=1)
-        meter.columnconfigure(1, weight=1)
-        meter.columnconfigure(2, weight=1)
-        meter.columnconfigure(3, weight=1)
-
-        self.meter_segments = []
-
-        for index in range(4):
-            segment = tk.Frame(meter, bg=BORDER, height=6)
-            segment.grid(row=0, column=index, sticky="ew", padx=(0, 4))
-            self.meter_segments.append(segment)
-
-        self.strength_label = tk.Label(
-            parent,
-            text="Password strength: empty",
-            font=FONT,
-            fg=MUTED,
-            bg=SURFACE,
-            anchor="w",
-        )
-        self.strength_label.grid(row=start_row + 1, column=0, sticky="ew", pady=(8, 0))
+        make_button(actions, "Generate", self.generate, font=FONT_LG).pack(side="left", ipadx=22, ipady=6)
+        make_button(actions, "Copy", self.copy, variant="secondary").pack(side="left", padx=10, ipadx=18, ipady=6)
 
     def add_check(self, parent, text, variable):
-        tk.Checkbutton(
+        ctk.CTkCheckBox(
             parent,
             text=text,
             variable=variable,
             font=FONT,
-            bg=SURFACE,
-            fg=TEXT,
-            selectcolor=SURFACE2,
-            activebackground=SURFACE,
-            activeforeground=TEXT,
+            text_color=TEXT,
+            fg_color=GOLD,
+            hover_color="#D8BA5C",
+            border_color=SURFACE2,
+            checkmark_color="#161622",
         ).pack(side="left", padx=(0, 18))
+
+    def build_strength_meter(self, parent, start_row):
+        meter = ctk.CTkFrame(parent, fg_color=SURFACE, corner_radius=0)
+        meter.grid(row=start_row, column=0, sticky="ew", pady=(12, 0))
+
+        for index in range(4):
+            meter.grid_columnconfigure(index, weight=1)
+
+        self.meter_segments = []
+
+        for index in range(4):
+            segment = ctk.CTkFrame(meter, fg_color=BORDER, height=6, corner_radius=4)
+            segment.grid(row=0, column=index, sticky="ew", padx=(0, 4))
+            self.meter_segments.append(segment)
+
+        self.strength_label = ctk.CTkLabel(
+            parent,
+            text="Password strength: empty",
+            font=FONT,
+            text_color=MUTED,
+            anchor="w",
+        )
+        self.strength_label.grid(row=start_row + 1, column=0, sticky="ew", pady=(8, 0))
 
     def password_score(self, value):
         score = 0
@@ -210,14 +193,11 @@ class GeneratorScreen(tk.Frame):
         colors = [BORDER, DANGER, "#D6A94F", GOLD, SUCCESS]
 
         for index, segment in enumerate(self.meter_segments):
-            if index < score:
-                segment.configure(bg=colors[score])
-            else:
-                segment.configure(bg=BORDER)
+            segment.configure(fg_color=colors[score] if index < score else BORDER)
 
         self.strength_label.configure(
             text=f"Password strength: {labels[score]}",
-            fg=colors[score],
+            text_color=colors[score],
         )
 
     def generate(self):
@@ -225,13 +205,10 @@ class GeneratorScreen(tk.Frame):
 
         if self.upper_var.get():
             pools.append(string.ascii_uppercase)
-
         if self.lower_var.get():
             pools.append(string.ascii_lowercase)
-
         if self.number_var.get():
             pools.append(string.digits)
-
         if self.symbol_var.get():
             pools.append("!@#$%^&*()-_=+[]{};:,.?")
 
@@ -243,10 +220,7 @@ class GeneratorScreen(tk.Frame):
             return
 
         alphabet = "".join(pools)
-        password = "".join(
-            secrets.choice(alphabet)
-            for _ in range(self.length_var.get())
-        )
+        password = "".join(secrets.choice(alphabet) for _ in range(int(self.length_var.get())))
 
         self.generated_var.set(password)
         self.update_strength()
@@ -255,16 +229,9 @@ class GeneratorScreen(tk.Frame):
         password = self.generated_var.get()
 
         if not password:
-            messagebox.showwarning(
-                "Nothing to copy",
-                "Generate a password before copying.",
-            )
+            messagebox.showwarning("Nothing to copy", "Generate a password before copying.")
             return
 
         self.clipboard_clear()
         self.clipboard_append(password)
-
-        messagebox.showinfo(
-            "Copied",
-            "Generated password copied to clipboard.",
-        )
+        messagebox.showinfo("Copied", "Generated password copied to clipboard.")

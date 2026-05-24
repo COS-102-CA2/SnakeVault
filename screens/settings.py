@@ -81,7 +81,7 @@ class SettingsScreen(ctk.CTkFrame):
 
         ctk.CTkLabel(
             body,
-            text="Changing the key will re-encrypt your saved passwords before updating Supabase.",
+            text="Updating your master key will re-encrypt all your saved passwords with the new key. Make sure to remember it!",
             font=FONT,
             text_color=MUTED,
         ).grid(row=1, column=0, sticky="w", pady=(2, 16))
@@ -111,7 +111,7 @@ class SettingsScreen(ctk.CTkFrame):
             text_color=TEXT,
         ).grid(row=10, column=0, sticky="w")
 
-                ctk.CTkFrame(
+        ctk.CTkFrame(
             body,
             fg_color=BORDER,
             height=1,

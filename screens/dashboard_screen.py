@@ -1,4 +1,4 @@
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import messagebox
 
 from libs.db import fetch_user_passwords, logout_user
@@ -29,9 +29,9 @@ from libs.window_manager import (
 )
 
 
-class DashboardScreen(tk.Frame):
+class DashboardScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
-        super().__init__(parent, bg=BG)
+        super().__init__(parent, fg_color=BG, corner_radius=0)
         self.controller = controller
         self.entries = []
 
@@ -39,37 +39,35 @@ class DashboardScreen(tk.Frame):
             self.after(0, lambda: self.controller.show_screen("login"))
             return
 
-        self.columnconfigure(1, weight=1)
-        self.rowconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
-        self.sidebar = tk.Frame(self, bg="#151522", width=172)
+        self.sidebar = ctk.CTkFrame(self, fg_color="#151522", corner_radius=0, width=172)
         self.sidebar.grid(row=0, column=0, sticky="ns")
         self.sidebar.grid_propagate(False)
 
-        self.main = tk.Frame(self, bg=BG)
+        self.main = ctk.CTkFrame(self, fg_color=BG, corner_radius=0)
         self.main.grid(row=0, column=1, sticky="nsew", padx=18, pady=16)
-        self.main.columnconfigure(0, weight=1)
-        self.main.rowconfigure(3, weight=1)
+        self.main.grid_columnconfigure(0, weight=1)
+        self.main.grid_rowconfigure(3, weight=1)
 
         self.build_sidebar()
         self.build_main()
         self.load_vault_data()
 
     def build_sidebar(self):
-        tk.Label(
+        ctk.CTkLabel(
             self.sidebar,
             text=f"{ICON_SNAKE} SnakeVault",
             font=FONT_LG,
-            fg=GOLD,
-            bg="#151522",
+            text_color=GOLD,
         ).pack(anchor="w", padx=16, pady=(24, 2))
 
-        self.entry_count = tk.Label(
+        self.entry_count = ctk.CTkLabel(
             self.sidebar,
             text="0 entries",
             font=FONT,
-            fg=MUTED,
-            bg="#151522",
+            text_color=MUTED,
         )
         self.entry_count.pack(anchor="w", padx=16, pady=(0, 24))
 
@@ -83,77 +81,64 @@ class DashboardScreen(tk.Frame):
         for text, target in nav_items:
             active = target == "dashboard"
 
-            tk.Button(
+            ctk.CTkButton(
                 self.sidebar,
                 text=text,
                 font=FONT,
                 anchor="w",
-                bg=SURFACE if active else "#151522",
-                fg=GOLD if active else MUTED,
-                activebackground=SURFACE,
-                activeforeground=TEXT,
-                bd=0,
-                cursor="hand2",
+                fg_color=SURFACE if active else "#151522",
+                text_color=GOLD if active else MUTED,
+                hover_color=SURFACE,
+                corner_radius=0,
                 command=lambda screen=target: self.controller.show_screen(screen),
-            ).pack(fill="x", padx=0, pady=2, ipady=9)
+            ).pack(fill="x", padx=0, pady=2, ipady=4)
 
-        tk.Button(
+        make_button(
             self.sidebar,
-            text=f"{ICON_LOCK}  Lock",
-            font=FONT,
-            bg="#E06B6B",
-            fg="#11111b",
-            activebackground="#F07C7C",
-            activeforeground="#11111b",
-            bd=0,
-            cursor="hand2",
-            command=self.handle_logout,
-        ).pack(side="bottom", anchor="w", padx=14, pady=22, ipadx=22, ipady=8)
+            f"{ICON_LOCK}  Lock",
+            self.handle_logout,
+            variant="danger",
+        ).pack(side="bottom", anchor="w", padx=14, pady=22, ipadx=12, ipady=5)
 
     def build_main(self):
-        tk.Label(
+        ctk.CTkLabel(
             self.main,
             text="Dashboard",
             font=FONT_TITLE,
-            fg=GOLD,
-            bg=BG,
+            text_color=GOLD,
         ).grid(row=0, column=0, sticky="w")
 
-        tk.Label(
+        ctk.CTkLabel(
             self.main,
             text="Your saved credentials at a glance",
             font=FONT,
-            fg=MUTED,
-            bg=BG,
+            text_color=MUTED,
         ).grid(row=1, column=0, sticky="w", pady=(2, 16))
 
-        stats = tk.Frame(self.main, bg=BG)
+        stats = ctk.CTkFrame(self.main, fg_color=BG, corner_radius=0)
         stats.grid(row=2, column=0, sticky="ew")
-        stats.columnconfigure(0, weight=1)
-        stats.columnconfigure(1, weight=1)
-        stats.columnconfigure(2, weight=1)
-        stats.columnconfigure(3, weight=1)
+        for index in range(4):
+            stats.grid_columnconfigure(index, weight=1)
 
         self.total_value = self.stat_card(stats, 0, ICON_KEY, "0", "Total")
         self.protected_value = self.stat_card(stats, 1, ICON_LOCK, "0", "Protected")
         self.category_value = self.stat_card(stats, 2, ICON_FOLDER, "0", "Categories")
         self.updated_value = self.stat_card(stats, 3, ICON_CLOCK, "Today", "Updated")
 
-        header = tk.Frame(self.main, bg=BG)
+        header = ctk.CTkFrame(self.main, fg_color=BG, corner_radius=0)
         header.grid(row=3, column=0, sticky="nsew", pady=(18, 0))
-        header.columnconfigure(0, weight=1)
-        header.rowconfigure(1, weight=1)
+        header.grid_columnconfigure(0, weight=1)
+        header.grid_rowconfigure(1, weight=1)
 
-        top_line = tk.Frame(header, bg=BG)
+        top_line = ctk.CTkFrame(header, fg_color=BG, corner_radius=0)
         top_line.grid(row=0, column=0, sticky="ew", pady=(0, 8))
-        top_line.columnconfigure(0, weight=1)
+        top_line.grid_columnconfigure(0, weight=1)
 
-        tk.Label(
+        ctk.CTkLabel(
             top_line,
             text="Recently accessed",
             font=FONT_LG,
-            fg=TEXT,
-            bg=BG,
+            text_color=TEXT,
         ).grid(row=0, column=0, sticky="w")
 
         make_button(
@@ -161,31 +146,32 @@ class DashboardScreen(tk.Frame):
             f"{ICON_REFRESH} Refresh",
             self.load_vault_data,
             variant="secondary",
-        ).grid(row=0, column=1, sticky="e", ipadx=14, ipady=6)
+        ).grid(row=0, column=1, sticky="e", ipadx=10, ipady=4)
 
-        self.scroll = ScrollableFrame(header, bg=SURFACE)
+        self.scroll = ScrollableFrame(header, fg_color=SURFACE)
         self.scroll.grid(row=1, column=0, sticky="nsew")
-        self.scroll.content.columnconfigure(0, weight=1)
+        self.scroll.content.grid_columnconfigure(0, weight=1)
 
-        self.list_frame = tk.Frame(
+        self.list_frame = ctk.CTkFrame(
             self.scroll.content,
-            bg=SURFACE,
-            highlightbackground=BORDER,
-            highlightthickness=1,
+            fg_color=SURFACE,
+            border_color=BORDER,
+            border_width=1,
+            corner_radius=8,
         )
         self.list_frame.grid(row=0, column=0, sticky="ew")
-        self.list_frame.columnconfigure(0, weight=1)
+        self.list_frame.grid_columnconfigure(0, weight=1)
 
-        footer = tk.Frame(self.main, bg=BG)
+        footer = ctk.CTkFrame(self.main, fg_color=BG, corner_radius=0)
         footer.grid(row=4, column=0, sticky="ew", pady=(12, 0))
-        footer.columnconfigure(0, weight=1)
+        footer.grid_columnconfigure(0, weight=1)
 
         make_button(
             footer,
-            "View all ->",
+            "View all →",
             lambda: self.controller.show_screen("search"),
             variant="secondary",
-        ).grid(row=0, column=1, ipadx=24, ipady=8, padx=(0, 10))
+        ).grid(row=0, column=1, ipadx=18, ipady=6, padx=(0, 10))
 
         make_button(
             footer,
@@ -193,41 +179,22 @@ class DashboardScreen(tk.Frame):
             lambda: self.controller.show_screen("add_password"),
             variant="primary",
             font=FONT_LG,
-        ).grid(row=0, column=2, ipadx=28, ipady=8)
+        ).grid(row=0, column=2, ipadx=22, ipady=6)
 
     def stat_card(self, parent, column, icon, value, label):
-        card = tk.Frame(
+        card = ctk.CTkFrame(
             parent,
-            bg=SURFACE,
-            highlightbackground=BORDER,
-            highlightthickness=1,
+            fg_color=SURFACE,
+            border_color=BORDER,
+            border_width=1,
+            corner_radius=8,
         )
         card.grid(row=0, column=column, sticky="ew", padx=(0, 10), ipady=10)
 
-        tk.Label(
-            card,
-            text=icon,
-            font=FONT_LG,
-            fg=GOLD,
-            bg=SURFACE,
-        ).pack()
-
-        value_label = tk.Label(
-            card,
-            text=value,
-            font=FONT_LG,
-            fg=GOLD,
-            bg=SURFACE,
-        )
+        ctk.CTkLabel(card, text=icon, font=FONT_LG, text_color=GOLD).pack()
+        value_label = ctk.CTkLabel(card, text=value, font=FONT_LG, text_color=GOLD)
         value_label.pack()
-
-        tk.Label(
-            card,
-            text=label,
-            font=FONT,
-            fg=MUTED,
-            bg=SURFACE,
-        ).pack()
+        ctk.CTkLabel(card, text=label, font=FONT, text_color=MUTED).pack()
 
         return value_label
 
@@ -257,12 +224,11 @@ class DashboardScreen(tk.Frame):
         self.entry_count.configure(text=f"{total} entries")
 
         if not self.entries:
-            tk.Label(
+            ctk.CTkLabel(
                 self.list_frame,
                 text="No passwords yet.",
                 font=FONT,
-                fg=MUTED,
-                bg=SURFACE,
+                text_color=MUTED,
             ).grid(row=0, column=0, pady=80)
             return
 
@@ -270,53 +236,49 @@ class DashboardScreen(tk.Frame):
             self.add_entry_row(item, row_index)
 
     def add_entry_row(self, item, row_index):
-        row = tk.Frame(
+        row = ctk.CTkFrame(
             self.list_frame,
-            bg=SURFACE,
-            cursor="hand2",
+            fg_color=SURFACE,
+            corner_radius=6,
         )
         row.grid(row=row_index, column=0, sticky="ew", padx=18, pady=8)
-        row.columnconfigure(1, weight=1)
+        row.grid_columnconfigure(1, weight=1)
 
         row.bind("<Button-1>", lambda _event: self.open_detail(item))
-        row.bind("<Enter>", lambda _event: row.configure(bg=SURFACE2))
-        row.bind("<Leave>", lambda _event: row.configure(bg=SURFACE))
+        row.bind("<Enter>", lambda _event: row.configure(fg_color=SURFACE2))
+        row.bind("<Leave>", lambda _event: row.configure(fg_color=SURFACE))
 
-        icon = tk.Label(
+        icon = ctk.CTkLabel(
             row,
             text=ICON_KEY,
             font=FONT_LG,
-            fg=GOLD,
-            bg=SURFACE,
+            text_color=GOLD,
         )
         icon.grid(row=0, column=0, rowspan=2, padx=(0, 12), sticky="w")
 
-        site_label = tk.Label(
+        site_label = ctk.CTkLabel(
             row,
             text=item.get("site_name", "Untitled"),
             font=FONT_LG,
-            fg=TEXT,
-            bg=SURFACE,
+            text_color=TEXT,
         )
         site_label.grid(row=0, column=1, sticky="w")
 
-        user_label = tk.Label(
+        user_label = ctk.CTkLabel(
             row,
             text=item.get("username", ""),
             font=FONT,
-            fg=MUTED,
-            bg=SURFACE,
+            text_color=MUTED,
         )
         user_label.grid(row=1, column=1, sticky="w")
 
-        category = item.get("category") or "General"
-
-        category_label = tk.Label(
+        category_label = ctk.CTkLabel(
             row,
-            text=category,
+            text=item.get("category") or "General",
             font=FONT,
-            fg=TEXT,
-            bg=SURFACE2,
+            text_color=TEXT,
+            fg_color=SURFACE2,
+            corner_radius=5,
             padx=10,
             pady=4,
         )

@@ -1,11 +1,10 @@
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import messagebox, simpledialog
 
 from libs.db import delete_password, get_master_key
 from libs.crypto import decrypt, verify_key
 from libs.window_manager import (
     BG,
-    BORDER,
     DANGER,
     FONT,
     FONT_LG,
@@ -27,9 +26,9 @@ from libs.window_manager import (
 )
 
 
-class PasswordDetailScreen(tk.Frame):
+class PasswordDetailScreen(ctk.CTkFrame):
     def __init__(self, parent, controller, entry):
-        super().__init__(parent, bg=BG)
+        super().__init__(parent, fg_color=BG, corner_radius=0)
         self.controller = controller
 
         if not self.controller.master_key:
@@ -37,27 +36,25 @@ class PasswordDetailScreen(tk.Frame):
             return
 
         self.entry_data = entry
-        self.verified_key = None
         self.revealed_password = None
         self.hide_job = None
 
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
 
         self.build_header()
         self.build_detail()
 
     def build_header(self):
-        top = tk.Frame(self, bg=BG)
+        top = ctk.CTkFrame(self, fg_color=BG, corner_radius=0)
         top.grid(row=0, column=0, sticky="ew", padx=PAD_X, pady=(42, 18))
-        top.columnconfigure(0, weight=1)
+        top.grid_columnconfigure(0, weight=1)
 
-        tk.Label(
+        ctk.CTkLabel(
             top,
             text=f"{ICON_KEY} Password Details",
             font=FONT_TITLE,
-            fg=GOLD,
-            bg=BG,
+            text_color=GOLD,
         ).grid(row=0, column=0, sticky="w")
 
         make_button(
@@ -68,17 +65,17 @@ class PasswordDetailScreen(tk.Frame):
         ).grid(row=0, column=1, sticky="e", ipadx=18, ipady=7)
 
     def build_detail(self):
-        scroll = ScrollableFrame(self, bg=BG)
+        scroll = ScrollableFrame(self, fg_color=BG)
         scroll.grid(row=1, column=0, sticky="nsew", padx=PAD_X, pady=(0, 42))
-        scroll.content.columnconfigure(0, weight=1)
+        scroll.content.grid_columnconfigure(0, weight=1)
 
         card = make_card(scroll.content)
         card.grid(row=0, column=0, sticky="ew")
-        card.columnconfigure(0, weight=1)
+        card.grid_columnconfigure(0, weight=1)
 
-        body = tk.Frame(card, bg=SURFACE)
+        body = ctk.CTkFrame(card, fg_color=SURFACE, corner_radius=0)
         body.grid(row=0, column=0, sticky="ew", padx=24, pady=24)
-        body.columnconfigure(0, weight=1)
+        body.grid_columnconfigure(0, weight=1)
 
         self.add_display(body, "Site", self.entry_data.get("site_name", ""), can_copy=True)
         self.add_display(body, "URL", self.entry_data.get("url", ""), can_copy=True)
@@ -88,52 +85,57 @@ class PasswordDetailScreen(tk.Frame):
             body,
             "Password",
             "Hidden until verified",
-            can_copy=False,
             password_row=True,
         )
 
         self.add_display(body, "Category", self.entry_data.get("category", "General"))
         self.add_display(body, "Notes", self.entry_data.get("notes", ""))
 
-        actions = tk.Frame(body, bg=SURFACE)
+        actions = ctk.CTkFrame(body, fg_color=SURFACE, corner_radius=0)
         actions.grid(row=20, column=0, sticky="ew", pady=(18, 0))
-        actions.columnconfigure(0, weight=1)
+        actions.grid_columnconfigure(0, weight=1)
 
         make_button(
             actions,
             f"{ICON_DELETE} Delete",
             self.delete_entry,
             variant="danger",
-        ).grid(row=0, column=1, sticky="e", ipadx=22, ipady=9)
+        ).grid(row=0, column=1, sticky="e", ipadx=22, ipady=6)
 
     def next_row(self, parent):
-        rows = [info["row"] for child in parent.grid_slaves() for info in [child.grid_info()]]
+        rows = [
+            child.grid_info()["row"]
+            for child in parent.grid_slaves()
+            if "row" in child.grid_info()
+        ]
+
         if not rows:
             return 0
+
         return max(int(row) for row in rows) + 1
 
     def add_display(self, parent, label, value, can_copy=False, password_row=False):
         row_index = self.next_row(parent)
 
-        tk.Label(
+        ctk.CTkLabel(
             parent,
             text=label,
             font=FONT,
-            fg=MUTED,
-            bg=SURFACE,
+            text_color=MUTED,
             anchor="w",
         ).grid(row=row_index, column=0, sticky="ew", pady=(0, 5))
 
-        row = tk.Frame(parent, bg=SURFACE)
+        row = ctk.CTkFrame(parent, fg_color=SURFACE, corner_radius=0)
         row.grid(row=row_index + 1, column=0, sticky="ew", pady=(0, 12))
-        row.columnconfigure(0, weight=1)
+        row.grid_columnconfigure(0, weight=1)
 
-        value_label = tk.Label(
+        value_label = ctk.CTkLabel(
             row,
             text=value or "-",
             font=FONT_LG,
-            fg=TEXT,
-            bg=SURFACE2,
+            text_color=TEXT,
+            fg_color=SURFACE2,
+            corner_radius=6,
             anchor="w",
             padx=12,
             pady=8,
@@ -147,14 +149,14 @@ class PasswordDetailScreen(tk.Frame):
                 self.toggle_reveal_password,
                 variant="secondary",
             )
-            self.reveal_btn.grid(row=0, column=1, padx=(8, 0), ipadx=12, ipady=8)
+            self.reveal_btn.grid(row=0, column=1, padx=(8, 0), ipadx=12, ipady=6)
 
             make_button(
                 row,
                 f"{ICON_COPY} Copy",
                 self.copy_password,
                 variant="secondary",
-            ).grid(row=0, column=2, padx=(8, 0), ipadx=12, ipady=8)
+            ).grid(row=0, column=2, padx=(8, 0), ipadx=12, ipady=6)
 
         elif can_copy:
             make_button(
@@ -162,7 +164,7 @@ class PasswordDetailScreen(tk.Frame):
                 f"{ICON_COPY} Copy",
                 lambda: self.copy_value(value_label.cget("text")),
                 variant="secondary",
-            ).grid(row=0, column=1, padx=(8, 0), ipadx=12, ipady=8)
+            ).grid(row=0, column=1, padx=(8, 0), ipadx=12, ipady=6)
 
         return value_label
 

@@ -23,6 +23,7 @@ from libs.window_manager import (
     SUCCESS,
     SURFACE,
     TEXT,
+    ScrollableFrame,
     make_button,
     make_card,
 )
@@ -41,35 +42,54 @@ class BackupExportScreen(ctk.CTkFrame):
         self.grid_rowconfigure(2, weight=1)
 
         self.build_header()
-        self.build_status()
-        self.build_cards()
+        self.build_content()
 
     def build_header(self):
+        header = ctk.CTkFrame(self, fg_color=BG, corner_radius=0)
+        header.grid(row=0, column=0, sticky="ew", padx=PAD_X, pady=(34, 12))
+        header.grid_columnconfigure(0, weight=1)
+
         ctk.CTkLabel(
-            self,
+            header,
             text="Backup & Export",
             font=FONT_TITLE,
             text_color=GOLD,
-        ).grid(row=0, column=0, pady=(36, 6))
+        ).grid(row=0, column=0)
 
         ctk.CTkLabel(
-            self,
+            header,
             text="Settings -> Data",
             font=FONT,
             text_color=MUTED,
-        ).grid(row=1, column=0, pady=(0, 18))
+        ).grid(row=1, column=0, pady=(6, 0))
 
-    def build_status(self):
-        status = make_card(self)
-        status.grid(row=2, column=0, sticky="ew", padx=PAD_X, pady=(0, 12))
+    def build_content(self):
+        scroll = ScrollableFrame(self, fg_color=BG)
+        scroll.grid(row=2, column=0, sticky="nsew", padx=PAD_X, pady=(0, 18))
+        scroll.content.grid_columnconfigure(0, weight=1)
+
+        self.build_status(scroll.content)
+        self.build_cards(scroll.content)
+
+        make_button(
+            scroll.content,
+            "<- Back to settings",
+            lambda: self.controller.show_screen("settings"),
+            variant="secondary",
+            font=FONT_LG,
+        ).grid(row=2, column=0, sticky="e", pady=(12, 0), ipadx=24, ipady=7)
+
+    def build_status(self, parent):
+        status = make_card(parent)
+        status.grid(row=0, column=0, sticky="ew", pady=(0, 12))
         status.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
             status,
             text="✅",
-            font=("Segoe UI Emoji", 24),
+            font=("Segoe UI Emoji", 26),
             text_color=SUCCESS,
-        ).grid(row=0, column=0, padx=(18, 12), pady=14)
+        ).grid(row=0, column=0, rowspan=2, padx=(18, 12), pady=14)
 
         ctk.CTkLabel(
             status,
@@ -77,7 +97,7 @@ class BackupExportScreen(ctk.CTkFrame):
             font=FONT_LG,
             text_color=SUCCESS,
             anchor="w",
-        ).grid(row=0, column=1, sticky="w", pady=(12, 0))
+        ).grid(row=0, column=1, sticky="w", pady=(14, 0))
 
         ctk.CTkLabel(
             status,
@@ -85,22 +105,23 @@ class BackupExportScreen(ctk.CTkFrame):
             font=FONT_SM,
             text_color=MUTED,
             anchor="w",
-        ).grid(row=1, column=1, sticky="w", pady=(0, 12))
+        ).grid(row=1, column=1, sticky="w", pady=(0, 14))
 
-    def build_cards(self):
-        grid = ctk.CTkFrame(self, fg_color=BG, corner_radius=0)
-        grid.grid(row=3, column=0, sticky="nsew", padx=PAD_X, pady=(0, 14))
+    def build_cards(self, parent):
+        grid = ctk.CTkFrame(parent, fg_color=BG, corner_radius=0)
+        grid.grid(row=1, column=0, sticky="ew")
 
         for index in range(3):
-            grid.grid_columnconfigure(index, weight=1)
+            grid.grid_columnconfigure(index, weight=1, uniform="backup_cards")
 
         encrypted = self.option_card(grid, 0, f"{ICON_LOCK} Encrypted backup (.svb)")
         ctk.CTkLabel(
             encrypted,
-            text="Export your vault as a fully encrypted file.\nSafe to store in cloud or email to yourself.",
+            text="Export your vault as a fully encrypted file.\nSafe to store in cloud storage or email.",
             font=FONT,
             text_color=MUTED,
             justify="left",
+            anchor="w",
         ).pack(anchor="w", padx=14, pady=(4, 18))
 
         make_button(
@@ -112,10 +133,11 @@ class BackupExportScreen(ctk.CTkFrame):
         csv_card = self.option_card(grid, 1, f"{ICON_WARNING} Export CSV (plain text)", danger=True)
         ctk.CTkLabel(
             csv_card,
-            text="WARNING: This file is NOT encrypted.\nDelete immediately after use.",
+            text="WARNING: This file is NOT encrypted.\nOnly export if you really need it.\nDelete it immediately after use.",
             font=FONT,
             text_color=MUTED,
             justify="left",
+            anchor="w",
         ).pack(anchor="w", padx=14, pady=(4, 18))
 
         make_button(
@@ -128,10 +150,11 @@ class BackupExportScreen(ctk.CTkFrame):
         import_card = self.option_card(grid, 2, f"{ICON_COPY} Import")
         ctk.CTkLabel(
             import_card,
-            text="Restore from a .svb file.\nImport support can be added later.",
+            text="Restore from a .svb file.\nImport support can be added as a future improvement.",
             font=FONT,
             text_color=MUTED,
             justify="left",
+            anchor="w",
         ).pack(anchor="w", padx=14, pady=(4, 18))
 
         make_button(
@@ -141,14 +164,6 @@ class BackupExportScreen(ctk.CTkFrame):
             variant="secondary",
         ).pack(anchor="w", padx=14, pady=(0, 14), ipadx=14, ipady=6)
 
-        make_button(
-            self,
-            "<- Back to settings",
-            lambda: self.controller.show_screen("settings"),
-            variant="secondary",
-            font=FONT_LG,
-        ).grid(row=4, column=0, sticky="e", padx=PAD_X, pady=(0, 14), ipadx=24, ipady=7)
-
     def option_card(self, parent, column, title, danger=False):
         card = ctk.CTkFrame(
             parent,
@@ -156,10 +171,10 @@ class BackupExportScreen(ctk.CTkFrame):
             border_color=DANGER if danger else BORDER,
             border_width=1,
             corner_radius=8,
+            height=245,
         )
         card.grid(row=0, column=column, sticky="nsew", padx=(0, 10))
         card.grid_propagate(False)
-        card.configure(height=245)
 
         ctk.CTkLabel(
             card,
@@ -235,8 +250,8 @@ class BackupExportScreen(ctk.CTkFrame):
 
         if not entered_key:
             return
-        
-                key_result = get_master_key()
+
+        key_result = get_master_key()
 
         if not key_result["success"] or not key_result["data"]:
             messagebox.showerror(

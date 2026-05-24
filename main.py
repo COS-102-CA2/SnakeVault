@@ -1,4 +1,4 @@
-import tkinter as tk
+import customtkinter as ctk
 
 from libs.window_manager import BG, make_responsive_root
 from screens.add_password import AddPasswordScreen
@@ -15,16 +15,19 @@ from screens.unlock import UnlockScreen
 from screens.welcome import WelcomeScreen
 
 
-class SnakeVaultApp(tk.Tk):
+class SnakeVaultApp(ctk.CTk):
     def __init__(self):
         super().__init__()
+
+        ctk.set_appearance_mode("dark")
+        ctk.set_default_color_theme("dark-blue")
 
         self.title("SnakeVault - Password Manager")
         self.geometry("800x550")
         make_responsive_root(self)
-        self.configure(bg=BG)
+        self.configure(fg_color=BG)
 
-        self.container = tk.Frame(self, bg=BG)
+        self.container = ctk.CTkFrame(self, fg_color=BG, corner_radius=0)
         self.container.pack(fill="both", expand=True)
 
         self.current_screen = None

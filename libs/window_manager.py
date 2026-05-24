@@ -1,4 +1,4 @@
-import tkinter as tk
+import customtkinter as ctk
 
 # Core colors
 BG = "#1E1E2E"
@@ -27,7 +27,7 @@ CARD_PAD_Y = 24
 BTN_PAD_X = 24
 BTN_PAD_Y = 8
 
-# Text icons
+# Icons
 ICON_SNAKE = "🐍"
 ICON_LOCK = "🔒"
 ICON_UNLOCK = "🔓"
@@ -47,107 +47,122 @@ ICON_EYE = "👁"
 ICON_EYE_OFF = "🙈"
 
 
+def make_responsive_root(root):
+    root.minsize(800, 550)
+    root.resizable(True, True)
+
+
+def make_frame(parent, fg_color=BG, corner_radius=0):
+    return ctk.CTkFrame(
+        parent,
+        fg_color=fg_color,
+        corner_radius=corner_radius,
+    )
+
+
+def make_card(parent):
+    return ctk.CTkFrame(
+        parent,
+        fg_color=SURFACE,
+        border_color=BORDER,
+        border_width=1,
+        corner_radius=8,
+    )
+
+
 def make_title(parent, text, bg=BG):
-    return tk.Label(
+    return ctk.CTkLabel(
         parent,
         text=text,
         font=FONT_TITLE,
-        fg=GOLD,
-        bg=bg,
+        text_color=GOLD,
+        fg_color=bg,
     )
 
 
 def make_subtitle(parent, text, bg=BG):
-    return tk.Label(
+    return ctk.CTkLabel(
         parent,
         text=text,
         font=FONT,
-        fg=MUTED,
-        bg=bg,
+        text_color=MUTED,
+        fg_color=bg,
     )
 
 
 def make_section_title(parent, text, bg=SURFACE):
-    return tk.Label(
+    return ctk.CTkLabel(
         parent,
         text=text,
         font=FONT_LG,
-        fg=TEXT,
-        bg=bg,
+        text_color=TEXT,
+        fg_color=bg,
         anchor="w",
     )
 
 
 def make_field_label(parent, text, bg=SURFACE):
-    return tk.Label(
+    return ctk.CTkLabel(
         parent,
         text=text,
         font=FONT,
-        fg=MUTED,
-        bg=bg,
+        text_color=MUTED,
+        fg_color=bg,
         anchor="w",
     )
 
 
-def make_card(parent):
-    return tk.Frame(
+def make_entry(parent, show=None):
+    return ctk.CTkEntry(
         parent,
-        bg=SURFACE,
-        highlightbackground=BORDER,
-        highlightthickness=1,
+        font=FONT,
+        fg_color=SURFACE2,
+        text_color=TEXT,
+        border_color=BORDER,
+        border_width=1,
+        corner_radius=6,
+        show=show,
     )
 
 
-def make_entry(parent, show=None):
-    return tk.Entry(
+def make_textbox(parent, height=100):
+    return ctk.CTkTextbox(
         parent,
+        height=height,
         font=FONT,
-        bg=SURFACE2,
-        fg=TEXT,
-        insertbackground=TEXT,
-        relief="flat",
-        show=show,
+        fg_color=SURFACE2,
+        text_color=TEXT,
+        border_color=BORDER,
+        border_width=1,
+        corner_radius=6,
     )
 
 
 def make_button(parent, text, command, variant="primary", font=None):
     if variant == "primary":
-        bg = GOLD
-        fg = "#161622"
-        active_bg = "#D8BA5C"
-        hover_bg = "#D8BA5C"
+        fg_color = GOLD
+        text_color = "#161622"
+        hover_color = "#D8BA5C"
     elif variant == "danger":
-        bg = DANGER
-        fg = "#11111B"
-        active_bg = "#F07C7C"
-        hover_bg = "#F07C7C"
+        fg_color = DANGER
+        text_color = "#11111B"
+        hover_color = "#F07C7C"
     else:
-        bg = SURFACE2
-        fg = TEXT
-        active_bg = "#3A3A54"
-        hover_bg = "#3A3A54"
+        fg_color = SURFACE2
+        text_color = TEXT
+        hover_color = "#3A3A54"
 
-    button = tk.Button(
+    return ctk.CTkButton(
         parent,
         text=text,
         font=font or FONT,
-        bg=bg,
-        fg=fg,
-        activebackground=active_bg,
-        activeforeground=fg,
-        bd=0,
-        relief="flat",
-        cursor="hand2",
+        fg_color=fg_color,
+        text_color=text_color,
+        hover_color=hover_color,
+        corner_radius=8,
+        border_width=0,
         command=command,
     )
-
-    button.default_bg = bg
-    button.hover_bg = hover_bg
-
-    button.bind("<Enter>", lambda _event: button.configure(bg=button.hover_bg))
-    button.bind("<Leave>", lambda _event: button.configure(bg=button.default_bg))
-
-    return button
 
 
 def make_icon_button(parent, text, command, variant="secondary"):
@@ -165,56 +180,19 @@ def clear_frame(frame):
         child.destroy()
 
 
-def make_responsive_root(root):
-    root.minsize(800, 550)
-    root.resizable(True, True)
+class ScrollableFrame(ctk.CTkFrame):
+    def __init__(self, parent, fg_color=BG, bg=None):
+        super().__init__(
+            parent,
+            fg_color=fg_color if bg is None else bg,
+            corner_radius=0,
+        )
 
-
-class ScrollableFrame(tk.Frame):
-    def __init__(self, parent, bg=BG):
-        super().__init__(parent, bg=bg)
-
-        self.canvas = tk.Canvas(
+        self.content = ctk.CTkScrollableFrame(
             self,
-            bg=bg,
-            highlightthickness=0,
-            bd=0,
+            fg_color=fg_color if bg is None else bg,
+            corner_radius=0,
+            scrollbar_button_color=SURFACE2,
+            scrollbar_button_hover_color="#3A3A54",
         )
-        self.scrollbar = tk.Scrollbar(
-            self,
-            orient="vertical",
-            command=self.canvas.yview,
-        )
-
-        self.content = tk.Frame(self.canvas, bg=bg)
-
-        self.window_id = self.canvas.create_window(
-            (0, 0),
-            window=self.content,
-            anchor="nw",
-        )
-
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
-
-        self.canvas.pack(side="left", fill="both", expand=True)
-        self.scrollbar.pack(side="right", fill="y")
-
-        self.content.bind("<Configure>", self.update_scroll_region)
-        self.canvas.bind("<Configure>", self.resize_content)
-        self.canvas.bind("<Enter>", self.bind_mousewheel)
-        self.canvas.bind("<Leave>", self.unbind_mousewheel)
-
-    def update_scroll_region(self, _event=None):
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-
-    def resize_content(self, event):
-        self.canvas.itemconfigure(self.window_id, width=event.width)
-
-    def bind_mousewheel(self, _event=None):
-        self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
-
-    def unbind_mousewheel(self, _event=None):
-        self.canvas.unbind_all("<MouseWheel>")
-
-    def on_mousewheel(self, event):
-        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        self.content.pack(fill="both", expand=True)

@@ -111,12 +111,40 @@ class SettingsScreen(ctk.CTkFrame):
             text_color=TEXT,
         ).grid(row=10, column=0, sticky="w")
 
+                ctk.CTkFrame(
+            body,
+            fg_color=BORDER,
+            height=1,
+            corner_radius=0,
+        ).grid(row=9, column=0, sticky="ew", pady=(4, 18))
+
+        ctk.CTkLabel(
+            body,
+            text="Data",
+            font=FONT_LG,
+            text_color=TEXT,
+        ).grid(row=10, column=0, sticky="w")
+
+        make_button(
+            body,
+            "Backup & Export",
+            lambda: self.controller.show_screen("backup_export"),
+            variant="secondary",
+        ).grid(row=11, column=0, sticky="w", pady=(12, 22), ipadx=20, ipady=6)
+
+        ctk.CTkLabel(
+            body,
+            text="Session",
+            font=FONT_LG,
+            text_color=TEXT,
+        ).grid(row=12, column=0, sticky="w")
+
         make_button(
             body,
             f"{ICON_LOCK} Logout and lock vault",
             self.logout,
             variant="danger",
-        ).grid(row=11, column=0, sticky="w", pady=(12, 0), ipadx=20, ipady=6)
+        ).grid(row=13, column=0, sticky="w", pady=(12, 0), ipadx=20, ipady=6)
 
     def add_field(self, parent, label, row):
         make_field_label(parent, label).grid(

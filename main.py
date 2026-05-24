@@ -13,6 +13,7 @@ from screens.settings import SettingsScreen
 from screens.setup_done import SetupDoneScreen
 from screens.unlock import UnlockScreen
 from screens.welcome import WelcomeScreen
+from screens.backup_export import BackupExportScreen
 
 
 class SnakeVaultApp(ctk.CTk):
@@ -52,6 +53,7 @@ class SnakeVaultApp(ctk.CTk):
             "generator": lambda: GeneratorScreen(self.container, self),
             "search": lambda: SearchScreen(self.container, self),
             "settings": lambda: SettingsScreen(self.container, self),
+            "backup_export": lambda: BackupExportScreen(self.container, self),
         }
 
         if screen_name not in screens:

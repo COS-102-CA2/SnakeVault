@@ -84,11 +84,11 @@ Welcome -> Login -> Unlock Vault -> Dashboard
 SnakeVault/
 ├── main.py
 ├── config.py
-├── db.py
 ├── requirements.txt
 ├── README.md
 ├── libs/
 │   ├── crypto.py
+│   ├── db.py
 │   └── window_manager.py
 └── screens/
     ├── welcome.py
@@ -256,17 +256,17 @@ The app shows a warning and asks the user to verify their master key before expo
 
 ## Team Roles
 
-P1: project lead, routing, shared state, database helpers, crypto helpers, merges  
-P2: dashboard and add password flow  
-P3: final UI/UX polish  
-P4: password detail, reveal, decrypt, delete  
-P5: welcome screen and password generator  
-P6: login/signup, create key, confirm key, unlock  
-P7: search, settings, change master key, backup/export, README
+Chinemerem Okolie: project lead, routing, shared state, database helpers, crypto helpers, merges, README
+Anieke Ozioma: dashboard and add password flow  
+Ogunremi Temiloluwa: final UI/UX polish  
+Zaccheaus Oluwatobiloba: password detail, reveal, decrypt, delete  
+Ohakaba Ebubechukwu: welcome screen and password generator  
+Moses Abraham: login/signup, create key, confirm key, unlock  
+Ukwu Kelechi: search, settings, change master key, backup/export
 
 ## Branch Workflow
 
-P1 works on:
+Team Lead works on:
 
 ```text
 main
@@ -300,7 +300,7 @@ git commit -m "feat: short description"
 git push -u origin feature/branch-name
 ```
 
-P1 merges after review:
+Team Lead merges after review:
 
 ```bash
 git checkout main
@@ -309,7 +309,7 @@ git merge feature/branch-name
 git push origin main
 ```
 
-After P1 merges, everyone pulls latest main:
+After Team Lead merges, everyone pulls latest main:
 
 ```bash
 git checkout feature/your-branch-name

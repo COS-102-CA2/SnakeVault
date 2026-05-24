@@ -1,4 +1,4 @@
-import tkinter as tk
+import customtkinter as ctk
 
 from libs.window_manager import BG, make_responsive_root
 from screens.add_password import AddPasswordScreen
@@ -13,18 +13,22 @@ from screens.settings import SettingsScreen
 from screens.setup_done import SetupDoneScreen
 from screens.unlock import UnlockScreen
 from screens.welcome import WelcomeScreen
+from screens.backup_export import BackupExportScreen
 
 
-class SnakeVaultApp(tk.Tk):
+class SnakeVaultApp(ctk.CTk):
     def __init__(self):
         super().__init__()
+
+        ctk.set_appearance_mode("dark")
+        ctk.set_default_color_theme("dark-blue")
 
         self.title("SnakeVault - Password Manager")
         self.geometry("800x550")
         make_responsive_root(self)
-        self.configure(bg=BG)
+        self.configure(fg_color=BG)
 
-        self.container = tk.Frame(self, bg=BG)
+        self.container = ctk.CTkFrame(self, fg_color=BG, corner_radius=0)
         self.container.pack(fill="both", expand=True)
 
         self.current_screen = None
@@ -49,6 +53,7 @@ class SnakeVaultApp(tk.Tk):
             "generator": lambda: GeneratorScreen(self.container, self),
             "search": lambda: SearchScreen(self.container, self),
             "settings": lambda: SettingsScreen(self.container, self),
+            "backup_export": lambda: BackupExportScreen(self.container, self),
         }
 
         if screen_name not in screens:

@@ -1,4 +1,4 @@
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import messagebox
 
 from libs.window_manager import (
@@ -14,8 +14,6 @@ from libs.window_manager import (
     PAD_X,
     SUCCESS,
     SURFACE,
-    SURFACE2,
-    TEXT,
     make_button,
     make_card,
     make_entry,
@@ -23,52 +21,45 @@ from libs.window_manager import (
 )
 
 
-class CreateKeyScreen(tk.Frame):
+class CreateKeyScreen(ctk.CTkFrame):
     def __init__(self, parent, controller):
-        super().__init__(parent, bg=BG)
+        super().__init__(parent, fg_color=BG, corner_radius=0)
         self.controller = controller
         self.show_key = False
 
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(2, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(2, weight=1)
 
-        tk.Label(
+        ctk.CTkLabel(
             self,
             text=f"{ICON_KEY} Create Your Master Key",
             font=FONT_TITLE,
-            fg=GOLD,
-            bg=BG,
+            text_color=GOLD,
         ).grid(row=0, column=0, pady=(44, 8))
 
-        tk.Label(
+        ctk.CTkLabel(
             self,
             text="This key encrypts everything in your vault",
             font=FONT,
-            fg=MUTED,
-            bg=BG,
+            text_color=MUTED,
         ).grid(row=1, column=0)
 
         card = make_card(self)
         card.grid(row=2, column=0, sticky="nsew", padx=PAD_X, pady=24)
-        card.columnconfigure(0, weight=1)
+        card.grid_columnconfigure(0, weight=1)
 
-        form = tk.Frame(card, bg=SURFACE)
+        form = ctk.CTkFrame(card, fg_color=SURFACE, corner_radius=0)
         form.grid(row=0, column=0, sticky="nsew", padx=18, pady=18)
-        form.columnconfigure(0, weight=1)
+        form.grid_columnconfigure(0, weight=1)
 
-        make_field_label(form, "Master key").grid(
-            row=0,
-            column=0,
-            sticky="ew",
-            pady=(0, 6),
-        )
+        make_field_label(form, "Master key").grid(row=0, column=0, sticky="ew", pady=(0, 6))
 
-        row = tk.Frame(form, bg=SURFACE)
+        row = ctk.CTkFrame(form, fg_color=SURFACE, corner_radius=0)
         row.grid(row=1, column=0, sticky="ew")
-        row.columnconfigure(0, weight=1)
+        row.grid_columnconfigure(0, weight=1)
 
         self.key_entry = make_entry(row, show="*")
-        self.key_entry.grid(row=0, column=0, sticky="ew", ipady=8)
+        self.key_entry.grid(row=0, column=0, sticky="ew", ipady=5)
         self.key_entry.bind("<KeyRelease>", self.update_strength)
 
         self.toggle_btn = make_button(
@@ -77,65 +68,52 @@ class CreateKeyScreen(tk.Frame):
             self.toggle_visibility,
             variant="secondary",
         )
-        self.toggle_btn.grid(row=0, column=1, padx=(8, 0), ipadx=12, ipady=7)
+        self.toggle_btn.grid(row=0, column=1, padx=(8, 0), ipadx=12, ipady=5)
 
-        meter = tk.Frame(form, bg=SURFACE)
+        meter = ctk.CTkFrame(form, fg_color=SURFACE, corner_radius=0)
         meter.grid(row=2, column=0, sticky="ew", pady=(12, 0))
-        meter.columnconfigure(0, weight=1)
-        meter.columnconfigure(1, weight=1)
-        meter.columnconfigure(2, weight=1)
-        meter.columnconfigure(3, weight=1)
+        for index in range(4):
+            meter.grid_columnconfigure(index, weight=1)
 
         self.meter_segments = []
         for index in range(4):
-            segment = tk.Frame(meter, bg=BORDER, height=6)
+            segment = ctk.CTkFrame(meter, fg_color=BORDER, height=6, corner_radius=4)
             segment.grid(row=0, column=index, sticky="ew", padx=(0, 4))
             self.meter_segments.append(segment)
 
-        self.strength_label = tk.Label(
+        self.strength_label = ctk.CTkLabel(
             form,
             text="Minimum 8 characters",
             font=FONT,
-            fg=MUTED,
-            bg=SURFACE,
+            text_color=MUTED,
+            fg_color=SURFACE,
             anchor="w",
         )
         self.strength_label.grid(row=3, column=0, sticky="ew", pady=(8, 16))
 
-        tk.Label(
+        ctk.CTkLabel(
             form,
             text="Tips: use several words, mix numbers, and add symbols.",
             font=FONT,
-            fg=MUTED,
-            bg=SURFACE,
+            text_color=MUTED,
+            fg_color=SURFACE,
             anchor="w",
         ).grid(row=4, column=0, sticky="ew", pady=(0, 8))
 
-        tk.Label(
+        ctk.CTkLabel(
             form,
             text="If you lose this key your vault cannot be recovered.",
             font=FONT,
-            fg=DANGER,
-            bg=SURFACE,
+            text_color=DANGER,
+            fg_color=SURFACE,
             anchor="w",
         ).grid(row=5, column=0, sticky="ew")
 
-        actions = tk.Frame(self, bg=BG)
+        actions = ctk.CTkFrame(self, fg_color=BG, corner_radius=0)
         actions.grid(row=3, column=0, sticky="e", padx=PAD_X, pady=(0, 24))
 
-        make_button(
-            actions,
-            "Cancel",
-            self.cancel,
-            variant="secondary",
-        ).pack(side="right", ipadx=24, ipady=9)
-
-        make_button(
-            actions,
-            "Continue →",
-            self.continue_to_confirm,
-            font=FONT_LG,
-        ).pack(side="right", padx=(0, 12), ipadx=26, ipady=9)
+        make_button(actions, "Cancel", self.cancel, variant="secondary").pack(side="right", ipadx=18, ipady=6)
+        make_button(actions, "Continue →", self.continue_to_confirm, font=FONT_LG).pack(side="right", padx=(0, 12), ipadx=20, ipady=6)
 
         self.key_entry.focus_set()
 
@@ -166,14 +144,11 @@ class CreateKeyScreen(tk.Frame):
         colors = [DANGER, DANGER, "#D6A94F", GOLD, SUCCESS]
 
         for index, segment in enumerate(self.meter_segments):
-            if index < score:
-                segment.configure(bg=colors[score])
-            else:
-                segment.configure(bg=BORDER)
+            segment.configure(fg_color=colors[score] if index < score else BORDER)
 
         self.strength_label.configure(
             text=labels[score],
-            fg=colors[score],
+            text_color=colors[score],
         )
 
     def continue_to_confirm(self):

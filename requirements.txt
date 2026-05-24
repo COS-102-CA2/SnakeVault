@@ -2,3 +2,5 @@ supabase
 bcrypt
 cryptography
 python-dotenv
+customtkinter
+pillow
